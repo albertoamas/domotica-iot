@@ -6,8 +6,8 @@ interface GaugeChartProps {
   value: number | null;
   min: number;
   max: number;
-  label: string;
-  unit: string;
+  label: string;   // nombre del sensor, ej: "Temperatura"
+  unit: string;    // unidad de medida, ej: "°C"
   color: string;
   size?: number;
   zones?: { threshold: number; color: string }[];
@@ -24,40 +24,46 @@ export default function GaugeChart({
   value, min, max, label, unit, color, size = 220,
   zones = [],
 }: GaugeChartProps) {
-  const pct     = value !== null ? Math.min(Math.max((value - min) / (max - min), 0), 1) : 0;
-  const filled  = pct * 100;
-  const empty   = 100 - filled;
+  const pct        = value !== null ? Math.min(Math.max((value - min) / (max - min), 0), 1) : 0;
+  const filled     = pct * 100;
+  const empty      = 100 - filled;
   const activeColor = value !== null && zones.length > 0
     ? getZoneColor(value, zones, color)
     : color;
 
-  // Fondo oscuro café para el track vacío
   const TRACK = '#2a1605';
-  const cx = size / 2;
-  const cy = size / 2 + size * 0.08;
+  const cx    = size / 2;
+  // Subimos el centro del arco para que el número quede holgado debajo
+  const cy    = size * 0.52;
+
+  // Altura del contenedor: suficiente para el arco + número sin solaparse
+  const containerH = size * 0.68;
+  const chartH     = size * 0.78;
 
   return (
     <div className="flex flex-col items-center select-none" style={{ width: size }}>
-      <div style={{ position: 'relative', width: size, height: size * 0.62 }}>
-        <PieChart width={size} height={size * 0.72}>
-          {/* Track (fondo) */}
+
+      {/* Arco + número superpuesto */}
+      <div style={{ position: 'relative', width: size, height: containerH }}>
+        <PieChart width={size} height={chartH}>
+          {/* Track vacío */}
           <Pie
             data={[{ value: 100 }]}
             cx={cx} cy={cy}
             startAngle={215} endAngle={-35}
-            innerRadius={size * 0.32} outerRadius={size * 0.44}
+            innerRadius={size * 0.30} outerRadius={size * 0.42}
             dataKey="value" stroke="none"
           >
             <Cell fill={TRACK} />
           </Pie>
 
-          {/* Valor activo */}
+          {/* Relleno del valor */}
           {value !== null && (
             <Pie
               data={[{ value: filled }, { value: empty }]}
               cx={cx} cy={cy}
               startAngle={215} endAngle={-35}
-              innerRadius={size * 0.32} outerRadius={size * 0.44}
+              innerRadius={size * 0.30} outerRadius={size * 0.42}
               dataKey="value" stroke="none"
               cornerRadius={4}
             >
@@ -67,22 +73,38 @@ export default function GaugeChart({
           )}
         </PieChart>
 
-        {/* Valor central */}
+        {/* Número centrado dentro del hueco del arco */}
         <div style={{
-          position: 'absolute', bottom: 2, left: 0, right: 0,
+          position: 'absolute',
+          top: cy - size * 0.13,   // centrado verticalmente en el hueco
+          left: 0, right: 0,
           display: 'flex', flexDirection: 'column', alignItems: 'center',
+          pointerEvents: 'none',
         }}>
-          <span style={{ fontSize: size * 0.2, fontWeight: 800, color: activeColor, lineHeight: 1 }}>
+          <span style={{
+            fontSize: size * 0.22,
+            fontWeight: 800,
+            color: activeColor,
+            lineHeight: 1,
+          }}>
             {value !== null ? value : '—'}
           </span>
-          <span style={{ fontSize: size * 0.07, color: '#6b7280', marginTop: 2 }}>{unit}</span>
+          <span style={{ fontSize: size * 0.08, color: '#6b7280', marginTop: 4 }}>
+            {unit}
+          </span>
         </div>
       </div>
 
-      {/* Min / Max */}
-      <div style={{ width: size * 0.78, display: 'flex', justifyContent: 'space-between', marginTop: -4 }}>
+      {/* Min | nombre del sensor | Max — sin repetir la unidad */}
+      <div style={{
+        width: size * 0.80,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: -8,
+      }}>
         <span style={{ fontSize: 11, color: '#4b5563' }}>{min}</span>
-        <span style={{ fontSize: 13, fontWeight: 600, color: '#9ca3af' }}>{label}</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af' }}>{label}</span>
         <span style={{ fontSize: 11, color: '#4b5563' }}>{max}</span>
       </div>
     </div>

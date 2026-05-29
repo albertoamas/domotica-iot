@@ -100,7 +100,7 @@ export default function PlantasPage() {
                 <GaugeChart
                   value={plant.temperatura}
                   min={0} max={50}
-                  label="°C" unit="°C"
+                  label="Temperatura" unit="°C"
                   color="#fb923c"
                   size={240}
                   zones={TEMP_ZONES}
@@ -129,7 +129,7 @@ export default function PlantasPage() {
                 <GaugeChart
                   value={plant.humedad_aire}
                   min={0} max={100}
-                  label="%" unit="%"
+                  label="Humedad aire" unit="%"
                   color="#60a5fa"
                   size={240}
                   zones={HUM_ZONES}
