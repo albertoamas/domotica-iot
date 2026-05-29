@@ -1,5 +1,5 @@
-import Link from 'next/link';
-import { Home, History, Wifi } from 'lucide-react';
+import { Wifi } from 'lucide-react';
+import NavLinks from './NavLinks';
 
 export default function DomoticaLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,16 +10,7 @@ export default function DomoticaLayout({ children }: { children: React.ReactNode
             <Wifi size={20} className="text-blue-500" />
             Domótica IoT
           </div>
-          <div className="flex items-center gap-1">
-            <Link href="/" className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-              <Home size={15} />
-              Dashboard
-            </Link>
-            <Link href="/historial" className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-              <History size={15} />
-              Historial
-            </Link>
-          </div>
+          <NavLinks />
         </div>
       </nav>
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6">{children}</main>
