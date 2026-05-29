@@ -7,6 +7,7 @@ import type { PlantReading, PlantState } from '@/lib/plantTypes';
 import { sueloPercent } from '@/lib/plantTypes';
 import PlantCard from '@/components/PlantCard';
 import GaugeChart from '@/components/GaugeChart';
+import PlantAlert from '@/components/PlantAlert';
 
 // Paleta tierra-bosque (sincronizada con layout y componentes)
 const C = {
@@ -103,6 +104,9 @@ export default function PlantasPage() {
           Temperatura · Humedad · Suelo · Luz acumulada — actualización cada 3s
         </p>
       </div>
+
+      {/* ── Alertas activas ── */}
+      <PlantAlert state={plant} />
 
       {/* ── Estado actual — FULL WIDTH, GRANDE ── */}
       <section>

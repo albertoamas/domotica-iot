@@ -30,3 +30,10 @@ export function sueloPercent(raw: number | null): number | null {
 }
 
 export const PLANT_CHART_LIMIT = 50;
+
+// Umbrales de alerta
+export const PLANT_ALERTS = {
+  TEMP_ALTA:   35,   // °C — estrés por calor
+  TEMP_BAJA:   10,   // °C — riesgo de frío
+  SUELO_SECO:  25,   // % — necesita agua (basado en sueloPercent)
+};
