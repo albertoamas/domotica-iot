@@ -18,5 +18,5 @@ export interface RoomState {
   lastUpdate: string | null;
 }
 
-export const GAS_ALERT_THRESHOLD = 1000;
+export const GAS_ALERT_THRESHOLD = 3000;
 export const CHART_HISTORY_LIMIT = 50;
