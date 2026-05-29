@@ -31,7 +31,7 @@ export default function GaugeChart({
     ? getZoneColor(value, zones, color)
     : color;
 
-  const TRACK = '#2a1605';
+  const TRACK = '#1a3314';
   const cx    = size / 2;
   // Subimos el centro del arco para que el número quede holgado debajo
   const cy    = size * 0.52;
@@ -89,7 +89,7 @@ export default function GaugeChart({
           }}>
             {value !== null ? value : '—'}
           </span>
-          <span style={{ fontSize: size * 0.08, color: '#6b7280', marginTop: 4 }}>
+          <span style={{ fontSize: size * 0.08, color: '#4a7c40', marginTop: 4 }}>
             {unit}
           </span>
         </div>
@@ -103,8 +103,8 @@ export default function GaugeChart({
         alignItems: 'center',
         marginTop: -8,
       }}>
-        <span style={{ fontSize: 11, color: '#4b5563' }}>{min}{unit}</span>
-        <span style={{ fontSize: 11, color: '#4b5563' }}>{max}{unit}</span>
+        <span style={{ fontSize: 11, color: '#3a5c34' }}>{min}{unit}</span>
+        <span style={{ fontSize: 11, color: '#3a5c34' }}>{max}{unit}</span>
       </div>
     </div>
   );

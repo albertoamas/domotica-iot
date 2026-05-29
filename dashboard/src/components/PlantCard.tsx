@@ -1,78 +1,164 @@
 'use client';
 
-import { Sun, Moon, Leaf } from 'lucide-react';
+import { Sun, Moon, Leaf, Droplets, Thermometer, Wind } from 'lucide-react';
 import type { PlantState } from '@/lib/plantTypes';
 import { sueloPercent } from '@/lib/plantTypes';
 
-const S = '#160d03';   // surface
-const B = '#2a1605';   // border
+// Paleta tierra-bosque (sincronizada con layout.tsx)
+const T = {
+  cardBg:    '#0f1c0b',
+  cardRaise: '#152612',
+  border:    '#1e3d17',
+  borderDim: '#142a10',
+  accent:    '#4ade80',
+  textHi:    '#e8f5e1',
+  textMed:   '#6b9960',
+  textDim:   '#3a5c34',
+};
 
 interface PlantCardProps { state: PlantState }
-
-function Stat({ label, value, color }: { label: string; value: string | null; color: string }) {
-  return (
-    <div className="flex flex-col gap-0.5 px-3 py-2.5 rounded-xl"
-      style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${B}` }}>
-      <span className="text-xs" style={{ color: '#6b7280' }}>{label}</span>
-      <span className="text-xl font-bold" style={{ color }}>{value ?? '—'}</span>
-    </div>
-  );
-}
 
 export default function PlantCard({ state }: PlantCardProps) {
   const hayLuz   = state.luz_estado === 1;
   const sueloPct = sueloPercent(state.humedad_suelo);
-  const sueloColor = sueloPct === null ? '#fff'
+
+  const sueloColor = sueloPct === null ? T.accent
     : sueloPct < 25 ? '#f87171'
     : sueloPct < 50 ? '#fbbf24'
     : '#4ade80';
 
-  const lastUpdate = state.lastUpdate
+  const horasSol    = state.horas_sol    !== null ? state.horas_sol.toFixed(2)    : null;
+  const horasSombra = state.horas_sombra !== null ? state.horas_sombra.toFixed(2) : null;
+  const lastUpdate  = state.lastUpdate
     ? new Date(state.lastUpdate).toLocaleTimeString('es-ES') : null;
 
   return (
-    <div className="rounded-2xl p-4 flex flex-col gap-3"
-      style={{ background: S, border: `1px solid ${B}` }}>
+    <div className="w-full rounded-2xl p-6"
+      style={{ background: T.cardBg, border: `1px solid ${T.border}` }}>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Leaf size={18} className="text-green-400" />
-          <span className="font-semibold text-white">Estado actual</span>
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: 'rgba(74,222,128,0.12)', border: `1px solid ${T.border}` }}>
+            <Leaf size={20} style={{ color: T.accent }} />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold" style={{ color: T.textHi }}>Estado actual</h2>
+            {lastUpdate && (
+              <p className="text-xs" style={{ color: T.textDim }}>Act: {lastUpdate}</p>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full"
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold"
           style={hayLuz
-            ? { background: 'rgba(250,204,21,0.08)', color: '#fbbf24', border: '1px solid #713f12' }
-            : { background: 'rgba(99,102,241,0.08)', color: '#818cf8', border: '1px solid #312e81' }}>
-          {hayLuz ? <Sun size={11} /> : <Moon size={11} />}
-          <span className="ml-1">{hayLuz ? 'Con luz' : 'Sombra'}</span>
+            ? { background: 'rgba(251,191,36,0.1)', color: '#fbbf24', border: '1px solid #713f12' }
+            : { background: 'rgba(129,140,248,0.1)', color: '#a5b4fc', border: '1px solid #312e81' }}>
+          {hayLuz ? <Sun size={14} /> : <Moon size={14} />}
+          {hayLuz ? 'Con luz solar' : 'En sombra'}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <Stat label="Temperatura" value={state.temperatura !== null ? `${state.temperatura} °C` : null} color="#fb923c" />
-        <Stat label="Humedad aire" value={state.humedad_aire !== null ? `${state.humedad_aire} %` : null} color="#60a5fa" />
-        <Stat label="Horas de sol" value={state.horas_sol !== null ? `${state.horas_sol.toFixed(2)} h` : null} color="#fde68a" />
-        <Stat label="Horas sombra" value={state.horas_sombra !== null ? `${state.horas_sombra.toFixed(2)} h` : null} color="#818cf8" />
-      </div>
+      {/* ── Grid de métricas 3 columnas ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
-      {/* Barra humedad suelo */}
-      <div>
-        <div className="flex justify-between text-xs mb-1.5" style={{ color: '#6b7280' }}>
-          <span>Humedad del suelo</span>
-          <span style={{ color: sueloColor }}>{sueloPct !== null ? `${sueloPct}%` : '—'}</span>
+        {/* Columna 1 — Temperatura y Humedad aire */}
+        <div className="flex flex-col gap-3">
+          <div className="rounded-xl p-4"
+            style={{ background: T.cardRaise, border: `1px solid ${T.borderDim}` }}>
+            <div className="flex items-center gap-2 mb-2">
+              <Thermometer size={16} className="text-orange-400" />
+              <span className="text-xs font-medium" style={{ color: T.textMed }}>Temperatura</span>
+            </div>
+            <span className="text-4xl font-extrabold text-orange-400">
+              {state.temperatura !== null ? state.temperatura : '—'}
+            </span>
+            <span className="text-lg font-semibold text-orange-400 ml-1">°C</span>
+          </div>
+
+          <div className="rounded-xl p-4"
+            style={{ background: T.cardRaise, border: `1px solid ${T.borderDim}` }}>
+            <div className="flex items-center gap-2 mb-2">
+              <Wind size={16} className="text-blue-400" />
+              <span className="text-xs font-medium" style={{ color: T.textMed }}>Humedad aire</span>
+            </div>
+            <span className="text-4xl font-extrabold text-blue-400">
+              {state.humedad_aire !== null ? state.humedad_aire : '—'}
+            </span>
+            <span className="text-lg font-semibold text-blue-400 ml-1">%</span>
+          </div>
         </div>
-        <div className="h-2 rounded-full overflow-hidden" style={{ background: '#1f1000' }}>
-          {sueloPct !== null && (
-            <div className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${sueloPct}%`, background: sueloColor }} />
-          )}
+
+        {/* Columna 2 — Humedad del suelo */}
+        <div className="rounded-xl p-4 flex flex-col gap-4"
+          style={{ background: T.cardRaise, border: `1px solid ${T.borderDim}` }}>
+          <div className="flex items-center gap-2">
+            <Droplets size={16} style={{ color: sueloColor }} />
+            <span className="text-xs font-medium" style={{ color: T.textMed }}>Humedad del suelo</span>
+          </div>
+
+          {/* Valor grande */}
+          <div className="flex items-end gap-1">
+            <span className="text-5xl font-extrabold" style={{ color: sueloColor }}>
+              {sueloPct !== null ? sueloPct : '—'}
+            </span>
+            {sueloPct !== null && (
+              <span className="text-2xl font-bold mb-1.5" style={{ color: sueloColor }}>%</span>
+            )}
+          </div>
+
+          {/* Barra de progreso */}
+          <div>
+            <div className="h-3 rounded-full overflow-hidden" style={{ background: T.borderDim }}>
+              {sueloPct !== null && (
+                <div className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${sueloPct}%`, background: sueloColor }} />
+              )}
+            </div>
+            <div className="flex justify-between text-xs mt-1.5" style={{ color: T.textDim }}>
+              <span>Seco</span>
+              <span className="font-medium" style={{ color: T.textMed }}>
+                {sueloPct !== null && sueloPct < 25 ? '⚠ Regar pronto'
+                  : sueloPct !== null && sueloPct >= 50 ? '✓ Bien hidratada'
+                  : 'Moderado'}
+              </span>
+              <span>Húmedo</span>
+            </div>
+          </div>
+
+          {/* Raw value */}
+          <div className="text-xs" style={{ color: T.textDim }}>
+            Sensor RAW: {state.humedad_suelo ?? '—'}
+          </div>
         </div>
-        <div className="flex justify-between text-xs mt-1" style={{ color: '#374151' }}>
-          <span>Seco</span><span>Húmedo</span>
+
+        {/* Columna 3 — Horas de luz */}
+        <div className="flex flex-col gap-3">
+          <div className="rounded-xl p-4 flex-1"
+            style={{ background: 'rgba(253,230,138,0.06)', border: '1px solid #713f12' }}>
+            <div className="flex items-center gap-2 mb-3">
+              <Sun size={16} className="text-yellow-400" />
+              <span className="text-xs font-medium" style={{ color: T.textMed }}>Horas de sol acum.</span>
+            </div>
+            <span className="text-4xl font-extrabold text-yellow-400">
+              {horasSol ?? '—'}
+            </span>
+            {horasSol && <span className="text-base font-semibold text-yellow-400 ml-1">h</span>}
+          </div>
+
+          <div className="rounded-xl p-4 flex-1"
+            style={{ background: 'rgba(129,140,248,0.06)', border: '1px solid #312e81' }}>
+            <div className="flex items-center gap-2 mb-3">
+              <Moon size={16} className="text-indigo-400" />
+              <span className="text-xs font-medium" style={{ color: T.textMed }}>Horas de sombra acum.</span>
+            </div>
+            <span className="text-4xl font-extrabold text-indigo-400">
+              {horasSombra ?? '—'}
+            </span>
+            {horasSombra && <span className="text-base font-semibold text-indigo-400 ml-1">h</span>}
+          </div>
         </div>
       </div>
-
-      {lastUpdate && <p className="text-xs text-right" style={{ color: '#374151' }}>Act: {lastUpdate}</p>}
     </div>
   );
 }

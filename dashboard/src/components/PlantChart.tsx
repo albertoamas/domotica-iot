@@ -19,15 +19,15 @@ interface PlantChartProps {
   transform?: (v: number) => number;
 }
 
-const S = '#160d03';
-const B = '#2a1605';
+const S = '#0f1c0b';
+const B = '#1e3d17';
 
 const tooltipStyle = {
-  backgroundColor: '#160d03',
-  border: '1px solid #2a1605',
+  backgroundColor: '#0f1c0b',
+  border: '1px solid #1e3d17',
   borderRadius: '8px',
   fontSize: '12px',
-  color: '#fff',
+  color: '#e8f5e1',
 };
 
 function formatTime(iso: string) {
@@ -78,7 +78,7 @@ export default function PlantChart({
   return (
     <div className="rounded-xl p-4" style={{ background: S, border: `1px solid ${B}` }}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold" style={{ color: '#d1fae5' }}>{label}</h3>
+        <h3 className="text-sm font-semibold" style={{ color: '#e8f5e1' }}>{label}</h3>
         {!loading && displayLast !== null && (
           <span className="text-sm font-bold px-2.5 py-1 rounded-full"
             style={{ background: 'rgba(255,255,255,0.05)', color }}>
@@ -89,11 +89,11 @@ export default function PlantChart({
 
       {loading ? (
         <div style={{ height }} className="flex items-center justify-center text-sm">
-          <span style={{ color: '#374151' }}>Cargando...</span>
+          <span style={{ color: '#3a5c34' }}>Cargando...</span>
         </div>
       ) : data.length === 0 ? (
         <div style={{ height }} className="flex items-center justify-center">
-          <span className="text-sm" style={{ color: '#374151' }}>Sin datos aún</span>
+          <span className="text-sm" style={{ color: '#3a5c34' }}>Sin datos aún</span>
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={height}>
@@ -104,9 +104,9 @@ export default function PlantChart({
                 <stop offset="95%" stopColor={color} stopOpacity={0.02} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1f1000" />
-            <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#4b5563' }} interval="preserveStartEnd" />
-            <YAxis tick={{ fontSize: 10, fill: '#4b5563' }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#142a10" />
+            <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#4a7c40' }} interval="preserveStartEnd" />
+            <YAxis tick={{ fontSize: 10, fill: '#4a7c40' }} />
             <Tooltip contentStyle={tooltipStyle} formatter={(val) => [`${val}${unit}`, label]} />
             {sensorType === 'humedad_suelo' && (
               <ReferenceLine y={25} stroke="#f59e0b" strokeDasharray="4 2"

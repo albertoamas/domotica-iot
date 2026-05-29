@@ -8,27 +8,52 @@ import { sueloPercent } from '@/lib/plantTypes';
 import PlantCard from '@/components/PlantCard';
 import GaugeChart from '@/components/GaugeChart';
 
-const B = '#2a1605';
-const S = '#160d03';
+// Paleta tierra-bosque (sincronizada con layout y componentes)
+const C = {
+  cardBg:    '#0f1c0b',
+  border:    '#1e3d17',
+  borderDim: '#142a10',
+  textMed:   '#6b9960',
+  textDim:   '#3a5c34',
+};
 
 const EMPTY: PlantState = {
   temperatura: null, humedad_aire: null, luz_estado: null,
   humedad_suelo: null, horas_sol: null, horas_sombra: null, lastUpdate: null,
 };
 
-// Zonas de color para los gauges
 const TEMP_ZONES = [
-  { threshold: 0,  color: '#818cf8' }, // frío
-  { threshold: 15, color: '#4ade80' }, // ideal
-  { threshold: 30, color: '#fbbf24' }, // caliente
-  { threshold: 38, color: '#f87171' }, // muy caliente
+  { threshold: 0,  color: '#818cf8' },
+  { threshold: 15, color: '#4ade80' },
+  { threshold: 30, color: '#fbbf24' },
+  { threshold: 38, color: '#f87171' },
 ];
 const HUM_ZONES = [
-  { threshold: 0,  color: '#f87171' }, // muy seco
-  { threshold: 30, color: '#fbbf24' }, // bajo
-  { threshold: 50, color: '#4ade80' }, // ideal
-  { threshold: 80, color: '#60a5fa' }, // muy húmedo
+  { threshold: 0,  color: '#f87171' },
+  { threshold: 30, color: '#fbbf24' },
+  { threshold: 50, color: '#4ade80' },
+  { threshold: 80, color: '#60a5fa' },
 ];
+
+function SectionTitle({ children }: { children: string }) {
+  return (
+    <div className="flex items-center gap-3 mb-4">
+      <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: C.textDim }}>
+        {children}
+      </span>
+      <div className="flex-1 h-px" style={{ background: C.borderDim }} />
+    </div>
+  );
+}
+
+function LegendDot({ color, label }: { color: string; label: string }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+      <span className="text-xs" style={{ color: C.textMed }}>{label}</span>
+    </div>
+  );
+}
 
 export default function PlantasPage() {
   const [plant, setPlant] = useState<PlantState>(EMPTY);
@@ -42,13 +67,10 @@ export default function PlantasPage() {
 
   useEffect(() => {
     loadInitial();
-
-    // Polling cada 3s — respaldo si Realtime no está habilitado
     const interval = setInterval(async () => {
       try { setPlant(await fetchLatestPlantReadings()); }
       catch { /* silencioso */ }
     }, 3000);
-
     const channel = supabase
       .channel('plantas-realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'plant_readings' }, (payload) => {
@@ -56,130 +78,87 @@ export default function PlantasPage() {
         setPlant((prev) => ({ ...prev, [row.sensor_type]: row.valor, lastUpdate: row.created_at }));
       })
       .subscribe();
-    return () => {
-      clearInterval(interval);
-      supabase.removeChannel(channel);
-    };
+    return () => { clearInterval(interval); supabase.removeChannel(channel); };
   }, [loadInitial]);
 
-  const hayLuz   = plant.luz_estado === 1;
-  const sueloPct = sueloPercent(plant.humedad_suelo);
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-40 gap-4">
+        <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
+          style={{ borderColor: '#1e3d17', borderTopColor: '#4ade80' }} />
+        <span className="text-sm" style={{ color: C.textDim }}>Cargando datos...</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-8">
 
       {/* Título */}
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Plant Monitor</h1>
-        <p className="text-sm mt-1" style={{ color: '#4b5563' }}>
-          Temperatura · Humedad · Suelo · Luz acumulada — tiempo real
+        <h1 className="text-3xl font-bold tracking-tight" style={{ color: '#e8f5e1' }}>
+          Plant Monitor
+        </h1>
+        <p className="text-sm mt-1" style={{ color: C.textDim }}>
+          Temperatura · Humedad · Suelo · Luz acumulada — actualización cada 3s
         </p>
       </div>
 
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-32 gap-3">
-          <div className="w-9 h-9 rounded-full border-2 border-green-500 border-t-transparent animate-spin" />
-          <span className="text-sm" style={{ color: '#4b5563' }}>Cargando datos...</span>
+      {/* ── Estado actual — FULL WIDTH, GRANDE ── */}
+      <section>
+        <SectionTitle>Estado actual</SectionTitle>
+        <PlantCard state={plant} />
+      </section>
+
+      {/* ── Gauges — Temperatura y Humedad ── */}
+      <section>
+        <SectionTitle>Condiciones ambientales</SectionTitle>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
+          {/* Gauge Temperatura */}
+          <div className="rounded-2xl p-6 flex flex-col items-center gap-3"
+            style={{ background: C.cardBg, border: `1px solid ${C.border}` }}>
+            <span className="text-sm font-semibold uppercase tracking-wider"
+              style={{ color: C.textMed }}>
+              Temperatura
+            </span>
+            <GaugeChart
+              value={plant.temperatura}
+              min={0} max={50}
+              label="Temperatura" unit="°C"
+              color="#fb923c" size={240} zones={TEMP_ZONES}
+            />
+            <div className="flex flex-wrap justify-center gap-3">
+              <LegendDot color="#818cf8" label="Frío < 15°C" />
+              <LegendDot color="#4ade80" label="Ideal 15–30°C" />
+              <LegendDot color="#fbbf24" label="Caliente 30–38°C" />
+              <LegendDot color="#f87171" label="Crítico > 38°C" />
+            </div>
+          </div>
+
+          {/* Gauge Humedad */}
+          <div className="rounded-2xl p-6 flex flex-col items-center gap-3"
+            style={{ background: C.cardBg, border: `1px solid ${C.border}` }}>
+            <span className="text-sm font-semibold uppercase tracking-wider"
+              style={{ color: C.textMed }}>
+              Humedad del aire
+            </span>
+            <GaugeChart
+              value={plant.humedad_aire}
+              min={0} max={100}
+              label="Humedad aire" unit="%"
+              color="#60a5fa" size={240} zones={HUM_ZONES}
+            />
+            <div className="flex flex-wrap justify-center gap-3">
+              <LegendDot color="#f87171" label="Muy seco < 30%" />
+              <LegendDot color="#fbbf24" label="Bajo 30–50%" />
+              <LegendDot color="#4ade80" label="Ideal 50–80%" />
+              <LegendDot color="#60a5fa" label="Húmedo > 80%" />
+            </div>
+          </div>
         </div>
-      ) : (
-        <>
-          {/* ── GAUGES — Temperatura y Humedad ── */}
-          <section>
-            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: '#4b5563' }}>
-              Condiciones ambientales
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      </section>
 
-              {/* Gauge Temperatura */}
-              <div className="rounded-2xl p-6 flex flex-col items-center gap-2"
-                style={{ background: S, border: `1px solid ${B}` }}>
-                <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: '#6b7280' }}>
-                  Temperatura
-                </span>
-                <GaugeChart
-                  value={plant.temperatura}
-                  min={0} max={50}
-                  label="Temperatura" unit="°C"
-                  color="#fb923c"
-                  size={240}
-                  zones={TEMP_ZONES}
-                />
-                <div className="flex gap-3 text-xs mt-1">
-                  {[
-                    { label: 'Frío',   color: '#818cf8', range: '< 15°C' },
-                    { label: 'Ideal',  color: '#4ade80', range: '15–30°C' },
-                    { label: 'Caliente', color: '#fbbf24', range: '30–38°C' },
-                    { label: 'Crítico', color: '#f87171', range: '> 38°C' },
-                  ].map((z) => (
-                    <div key={z.label} className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full inline-block" style={{ background: z.color }} />
-                      <span style={{ color: '#6b7280' }}>{z.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Gauge Humedad */}
-              <div className="rounded-2xl p-6 flex flex-col items-center gap-2"
-                style={{ background: S, border: `1px solid ${B}` }}>
-                <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: '#6b7280' }}>
-                  Humedad del aire
-                </span>
-                <GaugeChart
-                  value={plant.humedad_aire}
-                  min={0} max={100}
-                  label="Humedad aire" unit="%"
-                  color="#60a5fa"
-                  size={240}
-                  zones={HUM_ZONES}
-                />
-                <div className="flex gap-3 text-xs mt-1">
-                  {[
-                    { label: 'Muy seco', color: '#f87171', range: '< 30%' },
-                    { label: 'Bajo',     color: '#fbbf24', range: '30–50%' },
-                    { label: 'Ideal',    color: '#4ade80', range: '50–80%' },
-                    { label: 'Húmedo',   color: '#60a5fa', range: '> 80%' },
-                  ].map((z) => (
-                    <div key={z.label} className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full inline-block" style={{ background: z.color }} />
-                      <span style={{ color: '#6b7280' }}>{z.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* ── ESTADO + Suelo ── */}
-          <section>
-            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: '#4b5563' }}>
-              Estado de la planta
-            </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <PlantCard state={plant} />
-
-              {/* Panel de horas y luz */}
-              <div className="lg:col-span-2 grid grid-cols-2 gap-4 content-start">
-                {[
-                  { label: 'Horas de sol acum.',    val: plant.horas_sol    !== null ? `${plant.horas_sol.toFixed(2)} h`    : null, color: '#fde68a', bg: 'rgba(253,230,138,0.05)', br: '#713f12' },
-                  { label: 'Horas de sombra acum.', val: plant.horas_sombra !== null ? `${plant.horas_sombra.toFixed(2)} h` : null, color: '#818cf8', bg: 'rgba(129,140,248,0.05)', br: '#312e81' },
-                  { label: 'Humedad del suelo',      val: sueloPct !== null ? `${sueloPct} %` : null,                               color: '#4ade80', bg: 'rgba(74,222,128,0.05)', br: '#166534' },
-                  { label: 'Luz detectada',          val: plant.luz_estado !== null ? (hayLuz ? 'Con luz ☀' : 'Sombra 🌑') : null, color: hayLuz ? '#fbbf24' : '#818cf8', bg: hayLuz ? 'rgba(251,191,36,0.05)' : 'rgba(99,102,241,0.05)', br: hayLuz ? '#713f12' : '#312e81' },
-                ].map((item) => (
-                  <div key={item.label} className="rounded-xl px-5 py-6 flex flex-col gap-2"
-                    style={{ background: item.bg, border: `1px solid ${item.br}` }}>
-                    <span className="text-xs" style={{ color: '#6b7280' }}>{item.label}</span>
-                    <span className="text-3xl font-bold" style={{ color: item.color }}>
-                      {item.val ?? '—'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-        </>
-      )}
     </div>
   );
 }
