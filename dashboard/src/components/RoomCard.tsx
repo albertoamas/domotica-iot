@@ -1,0 +1,90 @@
+'use client';
+
+import { Thermometer, Droplets, Wind, Sun, Moon } from 'lucide-react';
+import type { RoomState } from '@/lib/types';
+import { GAS_ALERT_THRESHOLD } from '@/lib/types';
+
+interface RoomCardProps {
+  habitacion: 1 | 2;
+  state: RoomState;
+}
+
+function MetricRow({
+  icon,
+  label,
+  value,
+  unit,
+  danger,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number | null;
+  unit: string;
+  danger?: boolean;
+}) {
+  return (
+    <div className={`flex items-center justify-between p-3 rounded-lg ${danger ? 'bg-red-50 border border-red-200' : 'bg-gray-50'}`}>
+      <div className="flex items-center gap-2 text-gray-600">
+        {icon}
+        <span className="text-sm font-medium">{label}</span>
+      </div>
+      <span className={`text-lg font-bold ${danger ? 'text-red-600' : 'text-gray-800'}`}>
+        {value !== null ? `${value}${unit}` : '—'}
+      </span>
+    </div>
+  );
+}
+
+export default function RoomCard({ habitacion, state }: RoomCardProps) {
+  const gasAlert = state.gas !== null && state.gas > GAS_ALERT_THRESHOLD;
+  const isOscuro = state.luz === 1;
+
+  const lastUpdate = state.lastUpdate
+    ? new Date(state.lastUpdate).toLocaleTimeString('es-ES')
+    : null;
+
+  return (
+    <div className={`bg-white rounded-2xl shadow-md border-2 p-5 flex flex-col gap-3 transition-all ${gasAlert ? 'border-red-400' : 'border-gray-100'}`}>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-gray-800">
+          Habitación {habitacion}
+        </h2>
+        <div className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${isOscuro ? 'bg-indigo-100 text-indigo-700' : 'bg-yellow-100 text-yellow-700'}`}>
+          {isOscuro ? <Moon size={12} /> : <Sun size={12} />}
+          {isOscuro ? 'Oscuro' : 'Con luz'}
+        </div>
+      </div>
+
+      {/* Métricas */}
+      <div className="flex flex-col gap-2">
+        <MetricRow
+          icon={<Thermometer size={18} className="text-orange-500" />}
+          label="Temperatura"
+          value={state.temperatura}
+          unit=" °C"
+        />
+        <MetricRow
+          icon={<Droplets size={18} className="text-blue-500" />}
+          label="Humedad"
+          value={state.humedad}
+          unit=" %"
+        />
+        <MetricRow
+          icon={<Wind size={18} className={gasAlert ? 'text-red-500' : 'text-green-500'} />}
+          label="Gas / Humo"
+          value={state.gas}
+          unit=""
+          danger={gasAlert}
+        />
+      </div>
+
+      {/* Última actualización */}
+      {lastUpdate && (
+        <p className="text-xs text-gray-400 text-right">
+          Actualizado: {lastUpdate}
+        </p>
+      )}
+    </div>
+  );
+}
