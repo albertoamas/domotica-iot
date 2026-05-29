@@ -1,0 +1,21 @@
+{
+  "name": "mqtt-bridge",
+  "version": "1.0.0",
+  "description": "Bridge MQTT HiveMQ → Supabase para proyecto domótica IoT",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "dotenv": "^16.5.0",
+    "mqtt": "^5.10.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

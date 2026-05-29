@@ -1,0 +1,199 @@
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <PubSubClient.h>
+#include <DHT.h>
+
+// ===== WIFI =====
+const char* ssid     = "Casa Feliz";
+const char* password = "33331807759as";
+
+// ===== MQTT - HiveMQ Cloud =====
+const char* mqtt_server = "7c9421041ec04ce79cbf3520e3fcc77b.s1.eu.hivemq.cloud";
+const int   mqtt_port   = 8883;
+const char* mqtt_user   = "albertoamas";
+const char* mqtt_pass   = "Huevo0507";
+
+// ===== PINES - HABITACION 1 =====
+#define DHTPIN_1   25
+#define MQ2_PIN_1  34
+#define LUZ_PIN_1  33
+#define LED_PIN_1  26   // LED se enciende cuando LDR detecta oscuridad
+
+// ===== PINES - HABITACION 2 =====
+#define DHTPIN_2   27
+#define MQ2_PIN_2  35
+#define LUZ_PIN_2  32
+#define LED_PIN_2  14   // LED se enciende cuando LDR detecta oscuridad
+
+#define DHTTYPE DHT11
+
+WiFiClientSecure espClient;
+PubSubClient client(espClient);
+DHT dht1(DHTPIN_1, DHTTYPE);
+DHT dht2(DHTPIN_2, DHTTYPE);
+
+// ===== CALLBACK MQTT =====
+void callback(char* topic, byte* payload, unsigned int length) {
+  String mensaje = "";
+  for (unsigned int i = 0; i < length; i++) {
+    mensaje += (char)payload[i];
+  }
+
+  Serial.print("[MQTT] Comando recibido en ");
+  Serial.print(topic);
+  Serial.print(": ");
+  Serial.println(mensaje);
+
+  // Control LED desde el dashboard web
+  if (String(topic) == "habitacion/led/control") {
+    digitalWrite(LED_PIN_1, mensaje == "ON" ? HIGH : LOW);
+    Serial.print("[LED H1] ");
+    Serial.println(mensaje);
+  }
+  if (String(topic) == "habitacion2/led/control") {
+    digitalWrite(LED_PIN_2, mensaje == "ON" ? HIGH : LOW);
+    Serial.print("[LED H2] ");
+    Serial.println(mensaje);
+  }
+}
+
+// ===== WIFI =====
+void setup_wifi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWiFi conectado");
+  Serial.print("IP ESP32: ");
+  Serial.println(WiFi.localIP());
+}
+
+// ===== RECONEXION MQTT =====
+void reconnect() {
+  while (!client.connected()) {
+    Serial.print("Conectando MQTT HiveMQ... ");
+    if (client.connect("ESP32Cliente", mqtt_user, mqtt_pass)) {
+      Serial.println("CONECTADO");
+      // Suscribirse a los topics de control LED (desde el dashboard web)
+      client.subscribe("habitacion/led/control");
+      client.subscribe("habitacion2/led/control");
+      Serial.println("[MQTT] Suscrito a control LED");
+    } else {
+      Serial.print("ERROR: ");
+      Serial.println(client.state());
+      delay(2000);
+    }
+  }
+}
+
+// ===== SETUP =====
+void setup() {
+  Serial.begin(115200);
+
+  // Habitación 1
+  pinMode(LED_PIN_1, OUTPUT);
+  pinMode(LUZ_PIN_1, INPUT);
+  digitalWrite(LED_PIN_1, LOW);
+
+  // Habitación 2
+  pinMode(LED_PIN_2, OUTPUT);
+  pinMode(LUZ_PIN_2, INPUT);
+  digitalWrite(LED_PIN_2, LOW);
+
+  dht1.begin();
+  dht2.begin();
+
+  setup_wifi();
+
+  espClient.setInsecure();
+  client.setServer(mqtt_server, mqtt_port);
+  client.setCallback(callback);
+
+  Serial.println("=== DOMOTICA 2 HABITACIONES ===");
+  delay(2000);
+}
+
+// ===== LECTURA Y PUBLICACION SENSORES =====
+void leerHabitacion(DHT &dht, int mq_pin, int luz_pin, int led_pin,
+                    const char* topicTemp, const char* topicHum,
+                    const char* topicGas,  const char* topicLuz,
+                    const char* nombre) {
+
+  Serial.print("--- "); Serial.print(nombre); Serial.println(" ---");
+
+  // ---- DHT11 ----
+  float humedad     = dht.readHumidity();
+  float temperatura = dht.readTemperature();
+
+  if (isnan(humedad) || isnan(temperatura)) {
+    Serial.println("[DHT11] ERROR - verifica conexion");
+  } else {
+    Serial.print("[DHT11] Temp: ");
+    Serial.print(temperatura, 1);
+    Serial.print(" C  |  Humedad: ");
+    Serial.print(humedad, 1);
+    Serial.println(" %");
+
+    char tempString[8], humString[8];
+    dtostrf(temperatura, 1, 2, tempString);
+    dtostrf(humedad,     1, 2, humString);
+    client.publish(topicTemp, tempString);
+    client.publish(topicHum,  humString);
+  }
+
+  // ---- MQ2 ----
+  int gas = analogRead(mq_pin);
+  Serial.print("[MQ2]   Valor: ");
+  Serial.print(gas);
+  Serial.println(gas > 1000 ? "  ⚠ Gas/humo elevado" : "  Normal");
+
+  char gasString[8];
+  itoa(gas, gasString, 10);
+  client.publish(topicGas, gasString);
+
+  // ---- LDR + LED ----
+  int luz = digitalRead(luz_pin);
+
+  if (luz == 1) {
+    // LDR en oscuridad → encender LED de la habitación
+    digitalWrite(led_pin, HIGH);
+    Serial.println("[LUZ]   Estado: OSCURO → LED encendido");
+  } else {
+    // Hay luz → apagar LED
+    digitalWrite(led_pin, LOW);
+    Serial.println("[LUZ]   Estado: HAY LUZ → LED apagado");
+  }
+
+  char luzString[8];
+  itoa(luz, luzString, 10);
+  client.publish(topicLuz, luzString);
+}
+
+// ===== LOOP =====
+void loop() {
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+
+  // Habitación 1
+  leerHabitacion(
+    dht1, MQ2_PIN_1, LUZ_PIN_1, LED_PIN_1,
+    "habitacion/temperatura", "habitacion/humedad",
+    "habitacion/gas",         "habitacion/luz",
+    "HABITACION 1"
+  );
+
+  // Habitación 2
+  leerHabitacion(
+    dht2, MQ2_PIN_2, LUZ_PIN_2, LED_PIN_2,
+    "habitacion2/temperatura", "habitacion2/humedad",
+    "habitacion2/gas",         "habitacion2/luz",
+    "HABITACION 2"
+  );
+
+  Serial.println("====================");
+  delay(2000);
+}
