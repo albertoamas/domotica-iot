@@ -1,6 +1,5 @@
 import HistoryTable from '@/components/HistoryTable';
 
-// No pre-renderizar: depende de Supabase en runtime
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
