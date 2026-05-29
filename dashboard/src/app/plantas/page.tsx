@@ -6,7 +6,6 @@ import { fetchLatestPlantReadings } from '@/lib/plantSupabase';
 import type { PlantReading, PlantState } from '@/lib/plantTypes';
 import { sueloPercent } from '@/lib/plantTypes';
 import PlantCard from '@/components/PlantCard';
-import PlantChart from '@/components/PlantChart';
 import GaugeChart from '@/components/GaugeChart';
 
 const B = '#2a1605';
@@ -179,28 +178,6 @@ export default function PlantasPage() {
             </div>
           </section>
 
-          {/* ── GRÁFICAS GRANDES ── */}
-          <section>
-            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: '#4b5563' }}>
-              Histórico de sensores
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <PlantChart sensorType="temperatura"  label="Temperatura"        color="#fb923c" unit=" °C" height={220} />
-              <PlantChart sensorType="humedad_aire" label="Humedad del aire"    color="#60a5fa" unit=" %"  height={220} />
-              <PlantChart
-                sensorType="humedad_suelo"
-                label="Humedad del suelo"
-                color="#4ade80" unit=" %"
-                height={220}
-                transform={(v) => sueloPercent(v) ?? 0}
-              />
-              <PlantChart sensorType="horas_sol"    label="Horas de sol acum." color="#fde68a" unit=" h"  height={220} />
-            </div>
-            {/* Gráfica ancha — sombra */}
-            <div className="mt-5">
-              <PlantChart sensorType="horas_sombra" label="Horas de sombra acumuladas" color="#818cf8" unit=" h" height={200} />
-            </div>
-          </section>
         </>
       )}
     </div>

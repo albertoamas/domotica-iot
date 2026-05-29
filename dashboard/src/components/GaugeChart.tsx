@@ -95,7 +95,7 @@ export default function GaugeChart({
         </div>
       </div>
 
-      {/* Min | nombre del sensor | Max — sin repetir la unidad */}
+      {/* Min / Max — sin repetir el nombre del sensor */}
       <div style={{
         width: size * 0.80,
         display: 'flex',
@@ -103,9 +103,8 @@ export default function GaugeChart({
         alignItems: 'center',
         marginTop: -8,
       }}>
-        <span style={{ fontSize: 11, color: '#4b5563' }}>{min}</span>
-        <span style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af' }}>{label}</span>
-        <span style={{ fontSize: 11, color: '#4b5563' }}>{max}</span>
+        <span style={{ fontSize: 11, color: '#4b5563' }}>{min}{unit}</span>
+        <span style={{ fontSize: 11, color: '#4b5563' }}>{max}{unit}</span>
       </div>
     </div>
   );
