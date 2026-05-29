@@ -2,7 +2,7 @@
 
 import { Sun, Moon, Leaf, Droplets, Thermometer, Wind } from 'lucide-react';
 import type { PlantState } from '@/lib/plantTypes';
-import { sueloPercent } from '@/lib/plantTypes';
+import { sueloPercent, formatHoras } from '@/lib/plantTypes';
 
 // Paleta tierra-bosque (sincronizada con layout.tsx)
 const T = {
@@ -27,8 +27,8 @@ export default function PlantCard({ state }: PlantCardProps) {
     : sueloPct < 50 ? '#fbbf24'
     : '#4ade80';
 
-  const horasSol    = state.horas_sol    !== null ? state.horas_sol.toFixed(2)    : null;
-  const horasSombra = state.horas_sombra !== null ? state.horas_sombra.toFixed(2) : null;
+  const horasSol    = formatHoras(state.horas_sol);
+  const horasSombra = formatHoras(state.horas_sombra);
   const lastUpdate  = state.lastUpdate
     ? new Date(state.lastUpdate).toLocaleTimeString('es-ES') : null;
 
@@ -141,9 +141,8 @@ export default function PlantCard({ state }: PlantCardProps) {
               <span className="text-xs font-medium" style={{ color: T.textMed }}>Horas de sol acum.</span>
             </div>
             <span className="text-4xl font-extrabold text-yellow-400">
-              {horasSol ?? '—'}
+              {horasSol}
             </span>
-            {horasSol && <span className="text-base font-semibold text-yellow-400 ml-1">h</span>}
           </div>
 
           <div className="rounded-xl p-4 flex-1"
@@ -153,9 +152,8 @@ export default function PlantCard({ state }: PlantCardProps) {
               <span className="text-xs font-medium" style={{ color: T.textMed }}>Horas de sombra acum.</span>
             </div>
             <span className="text-4xl font-extrabold text-indigo-400">
-              {horasSombra ?? '—'}
+              {horasSombra}
             </span>
-            {horasSombra && <span className="text-base font-semibold text-indigo-400 ml-1">h</span>}
           </div>
         </div>
       </div>

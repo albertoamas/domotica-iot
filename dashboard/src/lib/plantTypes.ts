@@ -31,6 +31,17 @@ export function sueloPercent(raw: number | null): number | null {
 
 export const PLANT_CHART_LIMIT = 50;
 
+// Convierte horas decimales a texto legible
+// 0.021 → "1 min"   |   0.5 → "30 min"   |   1.75 → "1h 45m"
+export function formatHoras(h: number | null): string {
+  if (h === null) return '—';
+  const totalMin = Math.round(h * 60);
+  if (totalMin < 60) return `${totalMin} min`;
+  const hh = Math.floor(totalMin / 60);
+  const mm = totalMin % 60;
+  return mm > 0 ? `${hh}h ${mm}m` : `${hh}h`;
+}
+
 // Umbrales de alerta
 export const PLANT_ALERTS = {
   TEMP_ALTA:   35,   // °C — estrés por calor

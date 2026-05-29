@@ -31,7 +31,13 @@ export default function PlantasGraficasPage() {
             height={220}
             transform={(v) => sueloPercent(v) ?? 0}
           />
-          <PlantChart sensorType="horas_sol" label="Horas de sol acum." color="#fde68a" unit=" h" height={220} />
+          <PlantChart
+            sensorType="horas_sol"
+            label="Sol acumulado"
+            color="#fde68a" unit=" min"
+            height={220}
+            transform={(v) => Math.round(v * 60)}
+          />
         </div>
       </section>
 
@@ -43,7 +49,13 @@ export default function PlantasGraficasPage() {
           </h2>
           <div className="flex-1 h-px" style={{ background: '#142a10' }} />
         </div>
-        <PlantChart sensorType="horas_sombra" label="Horas de sombra acum." color="#818cf8" unit=" h" height={200} />
+        <PlantChart
+          sensorType="horas_sombra"
+          label="Sombra acumulada"
+          color="#818cf8" unit=" min"
+          height={200}
+          transform={(v) => Math.round(v * 60)}
+        />
       </section>
     </div>
   );

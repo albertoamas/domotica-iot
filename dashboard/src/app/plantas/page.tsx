@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { fetchLatestPlantReadings } from '@/lib/plantSupabase';
 import type { PlantReading, PlantState } from '@/lib/plantTypes';
-import { sueloPercent } from '@/lib/plantTypes';
+import { sueloPercent, formatHoras } from '@/lib/plantTypes';
 import PlantCard from '@/components/PlantCard';
 import GaugeChart from '@/components/GaugeChart';
 import PlantAlert from '@/components/PlantAlert';
