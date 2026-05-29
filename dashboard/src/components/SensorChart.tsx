@@ -43,7 +43,9 @@ export default function SensorChart({ habitacion, sensorType, label, color, unit
   useEffect(() => {
     loadHistory();
 
-    // Suscripción Realtime: cuando el bridge inserta una nueva fila
+    // Polling cada 5s — respaldo si Realtime no está habilitado
+    const interval = setInterval(loadHistory, 5000);
+
     const channel = supabase
       .channel(`chart-${habitacion}-${sensorType}`)
       .on(
@@ -68,6 +70,7 @@ export default function SensorChart({ habitacion, sensorType, label, color, unit
       .subscribe();
 
     return () => {
+      clearInterval(interval);
       supabase.removeChannel(channel);
     };
   }, [habitacion, sensorType, loadHistory]);

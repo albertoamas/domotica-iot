@@ -54,6 +54,10 @@ export default function PlantChart({
 
   useEffect(() => {
     loadHistory();
+
+    // Polling cada 5s — respaldo si Realtime no está habilitado
+    const interval = setInterval(loadHistory, 5000);
+
     const channel = supabase
       .channel(`plant-chart-${sensorType}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'plant_readings' }, (payload) => {
@@ -62,7 +66,11 @@ export default function PlantChart({
         setData((prev) => [...prev, row].slice(-PLANT_CHART_LIMIT));
       })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, [sensorType, loadHistory]);
 
   const lastVal = data.length > 0 ? data[data.length - 1].valor : null;
