@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Link from 'next/link';
-import { Home, History, Wifi } from 'lucide-react';
+import { Home, History, Wifi, Sprout } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Domótica IoT — Dashboard',
@@ -33,6 +33,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               >
                 <History size={15} />
                 Historial
+              </Link>
+              <Link
+                href="/plantas"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+              >
+                <Sprout size={15} />
+                Plantas
               </Link>
             </div>
           </div>
