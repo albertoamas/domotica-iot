@@ -40,7 +40,7 @@ export async function fetchLatestReadings(
         .eq('sensor_type', s)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single()
+        .maybeSingle()
     )
   );
 
