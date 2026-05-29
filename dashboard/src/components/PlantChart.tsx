@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
 import { supabase } from '@/lib/supabase';
@@ -15,33 +15,38 @@ interface PlantChartProps {
   label: string;
   color: string;
   unit: string;
+  height?: number;
   transform?: (v: number) => number;
 }
 
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('es-ES', {
-    hour: '2-digit', minute: '2-digit', second: '2-digit',
-  });
-}
+const S = '#160d03';
+const B = '#2a1605';
 
-const darkTooltipStyle = {
-  backgroundColor: '#111',
-  border: '1px solid #1a2e1a',
+const tooltipStyle = {
+  backgroundColor: '#160d03',
+  border: '1px solid #2a1605',
   borderRadius: '8px',
   fontSize: '12px',
   color: '#fff',
 };
 
-export default function PlantChart({ sensorType, label, color, unit, transform }: PlantChartProps) {
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString('es-ES', {
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  });
+}
+
+export default function PlantChart({
+  sensorType, label, color, unit, height = 200, transform,
+}: PlantChartProps) {
   const [data, setData] = useState<PlantReading[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadHistory = useCallback(async () => {
     try {
-      const rows = await fetchPlantHistory(sensorType, PLANT_CHART_LIMIT);
-      setData(rows);
+      setData(await fetchPlantHistory(sensorType, PLANT_CHART_LIMIT));
     } catch (err) {
-      console.error(`[PlantChart] Error ${sensorType}:`, err);
+      console.error(`[PlantChart] ${sensorType}:`, err);
     } finally {
       setLoading(false);
     }
@@ -62,43 +67,58 @@ export default function PlantChart({ sensorType, label, color, unit, transform }
 
   const lastVal = data.length > 0 ? data[data.length - 1].valor : null;
   const displayLast = lastVal !== null ? (transform ? transform(lastVal) : lastVal) : null;
+
   const chartData = data.map((r) => ({
     time: formatTime(r.created_at),
     valor: transform ? transform(r.valor) : Number(r.valor),
   }));
 
+  const gradientId = `grad-${sensorType}`;
+
   return (
-    <div className="rounded-xl p-4" style={{ background: '#0d0d0d', border: '1px solid #1a2e1a' }}>
-      <div className="flex items-center justify-between mb-3">
+    <div className="rounded-xl p-4" style={{ background: S, border: `1px solid ${B}` }}>
+      <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold" style={{ color: '#d1fae5' }}>{label}</h3>
         {!loading && displayLast !== null && (
-          <span className="text-xs" style={{ color: '#6b7280' }}>
-            Último: <strong style={{ color }}>{displayLast}{unit}</strong>
+          <span className="text-sm font-bold px-2.5 py-1 rounded-full"
+            style={{ background: 'rgba(255,255,255,0.05)', color }}>
+            {displayLast}{unit}
           </span>
         )}
       </div>
 
       {loading ? (
-        <div className="h-32 flex items-center justify-center text-sm" style={{ color: '#374151' }}>
-          Cargando...
+        <div style={{ height }} className="flex items-center justify-center text-sm">
+          <span style={{ color: '#374151' }}>Cargando...</span>
         </div>
       ) : data.length === 0 ? (
-        <div className="h-32 flex items-center justify-center text-sm" style={{ color: '#374151' }}>
-          Sin datos aún
+        <div style={{ height }} className="flex items-center justify-center">
+          <span className="text-sm" style={{ color: '#374151' }}>Sin datos aún</span>
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={140}>
-          <LineChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+        <ResponsiveContainer width="100%" height={height}>
+          <AreaChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor={color} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={color} stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#1f1000" />
             <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#4b5563' }} interval="preserveStartEnd" />
             <YAxis tick={{ fontSize: 10, fill: '#4b5563' }} />
-            <Tooltip contentStyle={darkTooltipStyle} formatter={(val) => [`${val}${unit}`, label]} />
+            <Tooltip contentStyle={tooltipStyle} formatter={(val) => [`${val}${unit}`, label]} />
             {sensorType === 'humedad_suelo' && (
               <ReferenceLine y={25} stroke="#f59e0b" strokeDasharray="4 2"
                 label={{ value: 'Seco', position: 'insideTopRight', fontSize: 10, fill: '#f59e0b' }} />
             )}
-            <Line type="monotone" dataKey="valor" stroke={color} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-          </LineChart>
+            <Area
+              type="monotone" dataKey="valor"
+              stroke={color} strokeWidth={2}
+              fill={`url(#${gradientId})`}
+              dot={false} activeDot={{ r: 5, fill: color }}
+            />
+          </AreaChart>
         </ResponsiveContainer>
       )}
     </div>
