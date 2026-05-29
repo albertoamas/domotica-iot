@@ -43,6 +43,13 @@ export default function PlantasPage() {
 
   useEffect(() => {
     loadInitial();
+
+    // Polling cada 3s — respaldo si Realtime no está habilitado
+    const interval = setInterval(async () => {
+      try { setPlant(await fetchLatestPlantReadings()); }
+      catch { /* silencioso */ }
+    }, 3000);
+
     const channel = supabase
       .channel('plantas-realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'plant_readings' }, (payload) => {
@@ -50,7 +57,10 @@ export default function PlantasPage() {
         setPlant((prev) => ({ ...prev, [row.sensor_type]: row.valor, lastUpdate: row.created_at }));
       })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, [loadInitial]);
 
   const hayLuz   = plant.luz_estado === 1;

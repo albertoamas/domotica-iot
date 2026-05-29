@@ -47,6 +47,17 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadInitial();
+
+    // Polling cada 3s — respaldo si Realtime no está habilitado en Supabase
+    const interval = setInterval(async () => {
+      try {
+        const [r1, r2] = await Promise.all([fetchLatestReadings(1), fetchLatestReadings(2)]);
+        setRoom1(readingsToState(r1));
+        setRoom2(readingsToState(r2));
+      } catch { /* silencioso */ }
+    }, 3000);
+
+    // Realtime — actualización instantánea cuando llega un dato nuevo
     const channel = supabase
       .channel('dashboard-realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sensor_readings' }, (payload) => {
@@ -55,7 +66,11 @@ export default function DashboardPage() {
         if (row.habitacion === 2) setRoom2((prev) => applyReading(prev, row));
       })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, [loadInitial]);
 
   return (
