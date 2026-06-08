@@ -15,8 +15,8 @@ interface AlertDef {
 }
 
 const STYLE: Record<Priority, { bg: string; border: string; pill: string; iconColor: string; titleColor: string }> = {
-  critica:     { bg: 'rgba(217,83,79,0.1)',   border: 'rgba(217,83,79,0.5)',   pill: 'rgba(217,83,79,0.22)',  iconColor: '#d9534f', titleColor: '#a23c38' },
-  advertencia: { bg: 'rgba(224,169,46,0.12)', border: 'rgba(224,169,46,0.55)', pill: 'rgba(224,169,46,0.25)', iconColor: '#c8901c', titleColor: '#8a6614' },
+  critica:     { bg: 'rgba(217,83,79,0.18)',  border: 'rgba(217,83,79,0.7)',   pill: 'rgba(217,83,79,0.3)',   iconColor: '#d9534f', titleColor: '#8b1a18' },
+  advertencia: { bg: 'rgba(224,169,46,0.16)', border: 'rgba(224,169,46,0.65)', pill: 'rgba(224,169,46,0.3)',  iconColor: '#c8901c', titleColor: '#7a5810' },
   informativa: { bg: PT.greenSoft,            border: 'rgba(92,138,46,0.4)',   pill: 'rgba(92,138,46,0.2)',   iconColor: PT.green,  titleColor: PT.greenDeep },
 };
 
