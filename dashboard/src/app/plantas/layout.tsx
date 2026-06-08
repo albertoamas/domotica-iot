@@ -7,60 +7,121 @@ export const metadata = {
   description: 'Monitoreo inteligente de plantas en tiempo real',
 };
 
-// Paleta verde clara — usada en todos los componentes de plantas
+// ── Paleta Minecraft: bloque de tierra con pasto ──────────────────────────
 export const T = {
-  pageBg:    '#dcfce7',   // green-100, fondo general
-  cardBg:    '#ffffff',   // cards blancas
-  cardRaise: '#f0fdf4',   // superficie elevada
-  border:    '#bbf7d0',   // green-200
-  borderDim: '#dcfce7',   // green-100
-  navBg:     '#ffffff',   // header blanco
-  accent:    '#16a34a',   // green-600, contrasta en fondo claro
-  accentDim: '#bbf7d0',   // green-200
-  textHi:    '#14532d',   // green-900, texto principal
-  textMed:   '#166534',   // green-800, texto secundario
-  textDim:   '#6b9960',   // texto sutil
+  pageBg:    '#1E3010',   // suelo del bosque oscuro
+  cardBg:    '#ffffff',
+  cardRaise: '#f0fdf4',
+  border:    '#4A7230',
+  borderDim: '#2D4A1A',
+  navBg:     '#6B4422',   // tierra Minecraft
+  navGrass:  '#55A729',   // pasto Minecraft
+  navDark:   '#3D2810',   // tierra oscura (borde inferior)
+  accent:    '#76C430',   // verde brillante Minecraft
+  accentDim: '#3D7A1A',
+  textNav:   '#F0E6C0',   // trigo/arena — legible sobre marrón
+  textNavDim:'rgba(240,230,192,0.55)',
+  textHi:    '#14532d',
+  textMed:   '#166534',
+  textDim:   '#6b9960',
 };
 
 export default function PlantasLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-full flex flex-col" style={{ background: T.pageBg, color: T.textHi }}>
-      <header style={{ background: T.navBg, borderBottom: `1px solid ${T.border}` }}
-        className="sticky top-0 z-10">
+
+      {/* ── Navbar: lateral del bloque de tierra con pasto ── */}
+      <header
+        className="sticky top-0 z-10"
+        style={{
+          background: T.navBg,
+          borderTop:    `6px solid ${T.navGrass}`,
+          borderBottom: `3px solid ${T.navDark}`,
+          boxShadow: '0 4px 24px rgba(0,0,0,0.45)',
+        }}
+      >
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
+
+          {/* ── Izquierda: volver + logo ── */}
           <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-1 text-xs hover:opacity-80 transition-opacity"
-              style={{ color: T.textDim }}>
+
+            {/* Volver */}
+            <Link
+              href="/"
+              className="flex items-center gap-1 text-xs hover:opacity-80 transition-opacity"
+              style={{ color: T.textNavDim }}
+            >
               <ArrowLeft size={13} />
-              Proyectos
+              <span className="hidden sm:inline">Proyectos</span>
             </Link>
-            <div className="w-px h-5" style={{ background: T.border }} />
+
+            {/* Divisor */}
+            <div className="w-px h-5" style={{ background: 'rgba(240,230,192,0.2)' }} />
+
+            {/* Logo: mini bloque Minecraft */}
             <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(74,222,128,0.12)', border: `1px solid ${T.accentDim}` }}>
-              <Leaf size={16} style={{ color: T.accent }} />
-            </div>
-            <div>
-              <span className="font-bold text-base tracking-tight" style={{ color: T.textHi }}>
-                Plant Monitor
-              </span>
-              <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full font-semibold"
-                style={{ background: 'rgba(74,222,128,0.1)', color: T.accent, border: `1px solid ${T.accentDim}` }}>
-                LIVE
-              </span>
-            </div>
+              <div style={{
+                width: 32, height: 32,
+                borderRadius: 4,
+                overflow: 'hidden',
+                border: `2px solid ${T.navDark}`,
+                flexShrink: 0,
+                boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)',
+              }}>
+                {/* Franja de pasto */}
+                <div style={{ height: 11, background: T.navGrass }} />
+                {/* Cuerpo de tierra con hoja */}
+                <div style={{
+                  height: 21,
+                  background: T.navBg,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <Leaf size={11} style={{ color: 'rgba(240,230,192,0.7)' }} />
+                </div>
+              </div>
+
+              {/* Título + badge */}
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-base tracking-tight" style={{ color: T.textNav }}>
+                  Plant Monitor
+                </span>
+                <span
+                  className="text-xs px-1.5 py-0.5 rounded font-bold"
+                  style={{
+                    background: 'rgba(85,167,41,0.25)',
+                    color: T.navGrass,
+                    border: `1px solid ${T.navGrass}`,
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  LIVE
+                </span>
+              </div>
             </div>
           </div>
+
+          {/* ── Derecha: navegación ── */}
           <PlantNavLinks />
         </div>
       </header>
 
+      {/* ── Contenido ── */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-5 py-7">{children}</main>
 
-      <footer className="text-center text-xs py-4"
-        style={{ color: T.textDim, borderTop: `1px solid ${T.borderDim}` }}>
+      {/* ── Footer: mismo tono tierra ── */}
+      <footer
+        className="text-center text-xs py-3"
+        style={{
+          color: T.textNavDim,
+          background: T.navBg,
+          borderTop: `3px solid ${T.navDark}`,
+        }}
+      >
         Plant Monitor · ESP32 + HiveMQ + Supabase
       </footer>
+
     </div>
   );
 }
