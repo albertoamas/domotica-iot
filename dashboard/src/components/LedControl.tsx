@@ -48,7 +48,7 @@ export default function LedControl({ habitacion }: LedControlProps) {
           fill={isOn ? 'currentColor' : 'none'}
         />
         <span className="text-sm font-medium text-gray-700">
-          LED Habitación {habitacion}
+          Luz Habitación {habitacion}
         </span>
       </div>
 
@@ -62,7 +62,7 @@ export default function LedControl({ habitacion }: LedControlProps) {
           className={`relative inline-flex h-7 w-13 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 ${
             isOn ? 'bg-yellow-400 focus:ring-yellow-400' : 'bg-gray-300 focus:ring-gray-400'
           } disabled:opacity-60 w-12`}
-          aria-label={`LED Habitación ${habitacion}: ${estado}`}
+          aria-label={`Luz Habitación ${habitacion}: ${estado}`}
         >
           {loading ? (
             <Loader2 size={12} className="absolute left-1/2 -translate-x-1/2 animate-spin text-white" />
