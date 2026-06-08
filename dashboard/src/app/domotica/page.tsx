@@ -170,14 +170,6 @@ export default function DashboardPage() {
               ? 'No disponible en Safari'
               : 'Activar notificaciones'}
           </button>
-          {notifPerm === 'granted' && (
-            <button
-              onClick={sendTestNotification}
-              className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-full border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors whitespace-nowrap"
-            >
-              Probar
-            </button>
-          )}
         </div>
       </div>
 
