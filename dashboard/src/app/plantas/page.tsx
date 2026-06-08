@@ -5,8 +5,9 @@ import { supabase } from '@/lib/supabase';
 import { fetchLatestPlantReadings } from '@/lib/plantSupabase';
 import type { PlantReading, PlantState } from '@/lib/plantTypes';
 import { sueloPercent, formatHoras } from '@/lib/plantTypes';
+import { Thermometer, Wind } from 'lucide-react';
 import PlantCard from '@/components/PlantCard';
-import GaugeChart from '@/components/GaugeChart';
+import AmbientCard from '@/components/AmbientCard';
 import PlantAlert from '@/components/PlantAlert';
 
 // Paleta tierra-bosque (sincronizada con layout y componentes)
@@ -24,16 +25,16 @@ const EMPTY: PlantState = {
 };
 
 const TEMP_ZONES = [
-  { threshold: 0,  color: '#818cf8' },
-  { threshold: 15, color: '#4ade80' },
-  { threshold: 30, color: '#fbbf24' },
-  { threshold: 38, color: '#f87171' },
+  { threshold: 0,  color: '#818cf8', label: 'Frío < 15°C' },
+  { threshold: 15, color: '#4ade80', label: 'Ideal 15–30°C' },
+  { threshold: 30, color: '#fbbf24', label: 'Caliente 30–38°C' },
+  { threshold: 38, color: '#f87171', label: 'Crítico > 38°C' },
 ];
 const HUM_ZONES = [
-  { threshold: 0,  color: '#f87171' },
-  { threshold: 30, color: '#fbbf24' },
-  { threshold: 50, color: '#4ade80' },
-  { threshold: 80, color: '#60a5fa' },
+  { threshold: 0,  color: '#f87171', label: 'Muy seco < 30%' },
+  { threshold: 30, color: '#fbbf24', label: 'Bajo 30–50%' },
+  { threshold: 50, color: '#4ade80', label: 'Ideal 50–80%' },
+  { threshold: 80, color: '#60a5fa', label: 'Húmedo > 80%' },
 ];
 
 function SectionTitle({ children }: { children: string }) {
@@ -47,14 +48,6 @@ function SectionTitle({ children }: { children: string }) {
   );
 }
 
-function LegendDot({ color, label }: { color: string; label: string }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <span className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-      <span className="text-xs" style={{ color: C.textMed }}>{label}</span>
-    </div>
-  );
-}
 
 export default function PlantasPage() {
   const [plant, setPlant] = useState<PlantState>(EMPTY);
@@ -114,52 +107,28 @@ export default function PlantasPage() {
         <PlantCard state={plant} />
       </section>
 
-      {/* ── Gauges — Temperatura y Humedad ── */}
+      {/* ── Condiciones ambientales ── */}
       <section>
         <SectionTitle>Condiciones ambientales</SectionTitle>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-
-          {/* Gauge Temperatura */}
-          <div className="rounded-2xl p-6 flex flex-col items-center gap-3"
-            style={{ background: C.cardBg, border: `1px solid ${C.border}` }}>
-            <span className="text-sm font-semibold uppercase tracking-wider"
-              style={{ color: C.textMed }}>
-              Temperatura
-            </span>
-            <GaugeChart
-              value={plant.temperatura}
-              min={0} max={50}
-              label="Temperatura" unit="°C"
-              color="#fb923c" size={240} zones={TEMP_ZONES}
-            />
-            <div className="flex flex-wrap justify-center gap-3">
-              <LegendDot color="#818cf8" label="Frío < 15°C" />
-              <LegendDot color="#4ade80" label="Ideal 15–30°C" />
-              <LegendDot color="#fbbf24" label="Caliente 30–38°C" />
-              <LegendDot color="#f87171" label="Crítico > 38°C" />
-            </div>
-          </div>
-
-          {/* Gauge Humedad */}
-          <div className="rounded-2xl p-6 flex flex-col items-center gap-3"
-            style={{ background: C.cardBg, border: `1px solid ${C.border}` }}>
-            <span className="text-sm font-semibold uppercase tracking-wider"
-              style={{ color: C.textMed }}>
-              Humedad del aire
-            </span>
-            <GaugeChart
-              value={plant.humedad_aire}
-              min={0} max={100}
-              label="Humedad aire" unit="%"
-              color="#60a5fa" size={240} zones={HUM_ZONES}
-            />
-            <div className="flex flex-wrap justify-center gap-3">
-              <LegendDot color="#f87171" label="Muy seco < 30%" />
-              <LegendDot color="#fbbf24" label="Bajo 30–50%" />
-              <LegendDot color="#4ade80" label="Ideal 50–80%" />
-              <LegendDot color="#60a5fa" label="Húmedo > 80%" />
-            </div>
-          </div>
+          <AmbientCard
+            title="Temperatura"
+            icon={<Thermometer size={20} />}
+            value={plant.temperatura}
+            unit="°C"
+            min={0} max={50}
+            defaultColor="#fb923c"
+            zones={TEMP_ZONES}
+          />
+          <AmbientCard
+            title="Humedad del aire"
+            icon={<Wind size={20} />}
+            value={plant.humedad_aire}
+            unit="%"
+            min={0} max={100}
+            defaultColor="#60a5fa"
+            zones={HUM_ZONES}
+          />
         </div>
       </section>
 
