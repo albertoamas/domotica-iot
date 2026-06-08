@@ -38,12 +38,23 @@ function sendGasNotification(habitacion: number, gasValue: number) {
   if (!notificationsSupported()) return;
   if (Notification.permission !== 'granted') return;
   try {
+    // Tag con timestamp → cada notificación es única, no se suprime en Windows
     new Notification(`⚠ Gas elevado — Habitación ${habitacion}`, {
       body: `Nivel: ${gasValue} (umbral: ${GAS_ALERT_THRESHOLD}). Ventila el ambiente.`,
       icon: '/favicon.ico',
-      tag: `gas-h${habitacion}`,
+      tag: `gas-h${habitacion}-${Date.now()}`,
     });
-  } catch { /* Safari puede rechazarlo silenciosamente */ }
+  } catch { /* no soportado */ }
+}
+
+function sendTestNotification() {
+  if (!notificationsSupported() || Notification.permission !== 'granted') return;
+  try {
+    new Notification('✅ Notificaciones funcionando', {
+      body: 'Recibirás alertas cuando el gas supere 3000.',
+      tag: `test-${Date.now()}`,
+    });
+  } catch { /* no soportado */ }
 }
 
 export default function DashboardPage() {
@@ -135,29 +146,39 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Botón notificaciones — siempre visible */}
-        <button
-          onClick={requestNotifications}
-          disabled={notifPerm === 'granted' || notifPerm === 'denied' || notifPerm === 'unsupported'}
-          className={`self-start flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-full border transition-colors whitespace-nowrap ${
-            notifPerm === 'granted'
-              ? 'bg-green-50 text-green-700 border-green-200 cursor-default'
+        {/* Botones de notificaciones — siempre visibles */}
+        <div className="self-start flex items-center gap-2">
+          <button
+            onClick={requestNotifications}
+            disabled={notifPerm === 'granted' || notifPerm === 'denied' || notifPerm === 'unsupported'}
+            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-full border transition-colors whitespace-nowrap ${
+              notifPerm === 'granted'
+                ? 'bg-green-50 text-green-700 border-green-200 cursor-default'
+                : notifPerm === 'denied'
+                ? 'bg-red-50 text-red-500 border-red-200 cursor-not-allowed'
+                : notifPerm === 'unsupported'
+                ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+                : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'
+            }`}
+          >
+            {notifPerm === 'granted' ? <Bell size={13} /> : <BellOff size={13} />}
+            {notifPerm === 'granted'
+              ? 'Notificaciones activas'
               : notifPerm === 'denied'
-              ? 'bg-red-50 text-red-500 border-red-200 cursor-not-allowed'
+              ? 'Notificaciones bloqueadas'
               : notifPerm === 'unsupported'
-              ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
-              : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'
-          }`}
-        >
-          {notifPerm === 'granted' ? <Bell size={13} /> : <BellOff size={13} />}
-          {notifPerm === 'granted'
-            ? 'Notificaciones activas'
-            : notifPerm === 'denied'
-            ? 'Notificaciones bloqueadas'
-            : notifPerm === 'unsupported'
-            ? 'No disponible en Safari'
-            : 'Activar notificaciones'}
-        </button>
+              ? 'No disponible en Safari'
+              : 'Activar notificaciones'}
+          </button>
+          {notifPerm === 'granted' && (
+            <button
+              onClick={sendTestNotification}
+              className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-full border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors whitespace-nowrap"
+            >
+              Probar
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Alertas de gas */}
