@@ -14,10 +14,10 @@ interface AlertDef {
   detail: string;
 }
 
-const STYLE: Record<Priority, { bg: string; border: string; pill: string; iconColor: string; titleColor: string }> = {
-  critica:     { bg: 'rgba(217,83,79,0.18)',  border: 'rgba(217,83,79,0.7)',   pill: 'rgba(217,83,79,0.3)',   iconColor: '#d9534f', titleColor: '#8b1a18' },
-  advertencia: { bg: 'rgba(224,169,46,0.16)', border: 'rgba(224,169,46,0.65)', pill: 'rgba(224,169,46,0.3)',  iconColor: '#c8901c', titleColor: '#7a5810' },
-  informativa: { bg: PT.greenSoft,            border: 'rgba(92,138,46,0.4)',   pill: 'rgba(92,138,46,0.2)',   iconColor: PT.green,  titleColor: PT.greenDeep },
+const STYLE: Record<Priority, { leftBorder: string; tint: string; pill: string; pillText: string; iconColor: string; titleColor: string }> = {
+  critica:     { leftBorder: '#d9534f', tint: 'rgba(217,83,79,0.06)',  pill: '#d9534f', pillText: '#fff',     iconColor: '#d9534f', titleColor: '#8b1a18' },
+  advertencia: { leftBorder: '#c8901c', tint: 'rgba(224,169,46,0.07)', pill: '#c8901c', pillText: '#fff',     iconColor: '#c8901c', titleColor: '#7a5810' },
+  informativa: { leftBorder: PT.green,  tint: 'rgba(92,138,46,0.06)',  pill: PT.green,  pillText: '#fff',     iconColor: PT.green,  titleColor: PT.greenDeep },
 };
 
 const PRIORITY_ORDER: Priority[] = ['critica', 'advertencia', 'informativa'];
@@ -26,8 +26,16 @@ function AlertBanner({ priority, icon, title, detail }: AlertDef) {
   const s = STYLE[priority];
   const PriorityIcon = priority === 'critica' ? AlertTriangle : priority === 'advertencia' ? AlertTriangle : Info;
   return (
-    <div className="flex items-start gap-3 rounded-2xl px-4 py-3.5"
-      style={{ background: s.bg, border: `1px solid ${s.border}`, boxShadow: PT.shadowSm }}>
+    <div className="flex items-start gap-3 rounded-2xl px-4 py-3.5 overflow-hidden"
+      style={{
+        background: PT.card,
+        boxShadow: PT.shadow,
+        borderLeft: `4px solid ${s.leftBorder}`,
+        borderTop: `1px solid ${PT.border}`,
+        borderRight: `1px solid ${PT.border}`,
+        borderBottom: `1px solid ${PT.border}`,
+        backgroundImage: `linear-gradient(to right, ${s.tint}, transparent 40%)`,
+      }}>
       <div className="flex items-center gap-1.5 mt-0.5 shrink-0">
         <PriorityIcon size={15} style={{ color: s.iconColor }} />
         <span style={{ color: s.iconColor }}>{icon}</span>
@@ -36,8 +44,8 @@ function AlertBanner({ priority, icon, title, detail }: AlertDef) {
         <p className="font-bold text-sm" style={{ color: s.titleColor }}>{title}</p>
         <p className="text-xs mt-0.5" style={{ color: PT.textMed }}>{detail}</p>
       </div>
-      <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full shrink-0 self-start mt-0.5"
-        style={{ background: s.pill, color: s.titleColor }}>
+      <span className="text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0 self-start mt-0.5"
+        style={{ background: s.pill, color: s.pillText }}>
         {priority === 'critica' ? 'Crítica' : priority === 'advertencia' ? 'Aviso' : 'Info'}
       </span>
     </div>
