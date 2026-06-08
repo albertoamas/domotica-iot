@@ -13,39 +13,23 @@ export async function fetchTodayStats(habitacion: 1 | 2): Promise<TodayStats> {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
-  console.log(`[fetchTodayStats] hab=${habitacion} | local now=${new Date().toLocaleString()} | since=${startOfDay.toISOString()}`);
-
-  const { data, error } = await supabase
-    .from('sensor_readings')
-    .select('sensor_type, valor')
-    .eq('habitacion', habitacion)
-    .gte('created_at', startOfDay.toISOString())
-    .in('sensor_type', ['temperatura', 'humedad', 'gas']);
+  const { data, error } = await supabase.rpc('get_today_stats', {
+    p_habitacion: habitacion,
+    p_since: startOfDay.toISOString(),
+  });
 
   if (error) throw new Error(error.message);
 
-  const rows = data as { sensor_type: string; valor: number }[];
-  console.log(`[fetchTodayStats] hab=${habitacion} | total rows=${rows.length} | por tipo:`, {
-    temperatura: rows.filter(r => r.sensor_type === 'temperatura').length,
-    humedad:     rows.filter(r => r.sensor_type === 'humedad').length,
-    gas:         rows.filter(r => r.sensor_type === 'gas').length,
-  });
-
   const result: TodayStats = { temperatura: null, humedad: null, gas: null };
-  const groups: Record<string, number[]> = { temperatura: [], humedad: [], gas: [] };
 
-  for (const row of rows) {
-    groups[row.sensor_type]?.push(Number(row.valor));
-  }
-
-  for (const key of ['temperatura', 'humedad', 'gas'] as const) {
-    const vals = groups[key];
-    if (vals.length === 0) continue;
+  for (const row of data as { sensor_type: string; min_val: number; max_val: number; avg_val: number; cnt: number }[]) {
+    const key = row.sensor_type as keyof TodayStats;
+    if (!(key in result)) continue;
     result[key] = {
-      min:   Math.min(...vals),
-      max:   Math.max(...vals),
-      avg:   Math.round(vals.reduce((a, b) => a + b, 0) / vals.length * 10) / 10,
-      count: vals.length,
+      min:   Number(row.min_val),
+      max:   Number(row.max_val),
+      avg:   Number(row.avg_val),
+      count: Number(row.cnt),
     } satisfies SensorStats;
   }
 
