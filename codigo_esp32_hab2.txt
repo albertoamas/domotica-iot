@@ -1,0 +1,123 @@
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <PubSubClient.h>
+#include <DHT.h>
+
+// ===== WIFI =====
+const char* ssid     = "Casa Feliz";
+const char* password = "33331807759as";
+
+// ===== MQTT - HiveMQ Cloud =====
+const char* mqtt_server = "7c9421041ec04ce79cbf3520e3fcc77b.s1.eu.hivemq.cloud";
+const int   mqtt_port   = 8883;
+const char* mqtt_user   = "albertoamas";
+const char* mqtt_pass   = "Huevo0507";
+
+// ===== PINES =====
+#define DHTPIN   27
+#define MQ2_PIN  35
+#define LUZ_PIN  32
+#define LED_PIN  14
+
+#define DHTTYPE DHT11
+
+WiFiClientSecure espClient;
+PubSubClient client(espClient);
+DHT dht(DHTPIN, DHTTYPE);
+
+// ===== CALLBACK MQTT =====
+void callback(char* topic, byte* payload, unsigned int length) {
+  String mensaje = "";
+  for (unsigned int i = 0; i < length; i++) {
+    mensaje += (char)payload[i];
+  }
+  Serial.print("[MQTT] Recibido: ");
+  Serial.println(mensaje);
+
+  digitalWrite(LED_PIN, mensaje == "ON" ? HIGH : LOW);
+  Serial.print("[LED] ");
+  Serial.println(mensaje);
+}
+
+// ===== WIFI =====
+void setup_wifi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWiFi conectado");
+  Serial.print("IP: ");
+  Serial.println(WiFi.localIP());
+}
+
+// ===== RECONEXION MQTT =====
+void reconnect() {
+  while (!client.connected()) {
+    Serial.print("Conectando MQTT... ");
+    if (client.connect("ESP32_H2", mqtt_user, mqtt_pass)) {
+      Serial.println("CONECTADO");
+      client.subscribe("habitacion2/led/control");
+    } else {
+      Serial.print("ERROR: ");
+      Serial.println(client.state());
+      delay(2000);
+    }
+  }
+}
+
+// ===== SETUP =====
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(LUZ_PIN, INPUT);
+  digitalWrite(LED_PIN, LOW);
+  dht.begin();
+  setup_wifi();
+  espClient.setInsecure();
+  client.setServer(mqtt_server, mqtt_port);
+  client.setCallback(callback);
+  Serial.println("=== HABITACION 2 ===");
+  delay(2000);
+}
+
+// ===== LOOP =====
+void loop() {
+  if (!client.connected()) reconnect();
+  client.loop();
+
+  Serial.println("--- HABITACION 2 ---");
+
+  // DHT11
+  float humedad     = dht.readHumidity();
+  float temperatura = dht.readTemperature();
+
+  if (isnan(humedad) || isnan(temperatura)) {
+    Serial.println("[DHT11] ERROR - verifica conexion");
+  } else {
+    Serial.print("[DHT11] Temp: "); Serial.print(temperatura, 1);
+    Serial.print(" C  |  Humedad: "); Serial.print(humedad, 1); Serial.println(" %");
+    char t[8], h[8];
+    dtostrf(temperatura, 1, 2, t);
+    dtostrf(humedad,     1, 2, h);
+    client.publish("habitacion2/temperatura", t);
+    client.publish("habitacion2/humedad",     h);
+  }
+
+  // MQ2
+  int gas = analogRead(MQ2_PIN);
+  Serial.print("[MQ2]   Valor: "); Serial.print(gas);
+  Serial.println(gas > 3000 ? "  ⚠ Gas/humo elevado" : "  Normal");
+  char g[8]; itoa(gas, g, 10);
+  client.publish("habitacion2/gas", g);
+
+  // LDR
+  int luz = digitalRead(LUZ_PIN);
+  Serial.println(luz == 1 ? "[LUZ]   OSCURO" : "[LUZ]   HAY LUZ");
+  char l[8]; itoa(luz, l, 10);
+  client.publish("habitacion2/luz", l);
+
+  Serial.println("====================");
+  delay(2000);
+}
