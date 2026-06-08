@@ -26,7 +26,9 @@ const char* mqtt_pass   = "Huevo0507";
 #define LED_PIN_2  14   // LED se enciende cuando LDR detecta oscuridad
 
 // ===== RELAY - VENTILADOR =====
-#define RELAY_PIN  12   // IN del módulo relay → GPIO 12
+// GPIO 13: libre, no es strapping pin (evitar GPIO 0, 2, 5, 12, 15)
+// La mayoría de módulos relay son ACTIVO LOW: LOW=encendido, HIGH=apagado
+#define RELAY_PIN  13
 
 #define DHTTYPE DHT11
 
@@ -48,8 +50,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.println(mensaje);
 
   // Control ventilador (relay) desde el dashboard web
+  // Activo LOW: ON→LOW activa el relay, OFF→HIGH lo desactiva
   if (String(topic) == "ventilador/control") {
-    digitalWrite(RELAY_PIN, mensaje == "ON" ? HIGH : LOW);
+    digitalWrite(RELAY_PIN, mensaje == "ON" ? LOW : HIGH);
     Serial.print("[RELAY] Ventilador: ");
     Serial.println(mensaje);
   }
@@ -103,9 +106,9 @@ void reconnect() {
 void setup() {
   Serial.begin(115200);
 
-  // Relay ventilador
+  // Relay ventilador — HIGH = apagado (activo LOW)
   pinMode(RELAY_PIN, OUTPUT);
-  digitalWrite(RELAY_PIN, LOW);
+  digitalWrite(RELAY_PIN, HIGH);
 
   // Habitación 1
   pinMode(LED_PIN_1, OUTPUT);

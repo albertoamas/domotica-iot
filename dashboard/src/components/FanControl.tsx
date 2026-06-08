@@ -42,7 +42,7 @@ export default function FanControl() {
         />
         <div>
           <span className="text-sm font-medium text-gray-700">Ventilador</span>
-          <span className="ml-2 text-xs text-gray-400">(relay GPIO 12)</span>
+          <span className="ml-2 text-xs text-gray-400">(relay GPIO 13)</span>
         </div>
       </div>
 
