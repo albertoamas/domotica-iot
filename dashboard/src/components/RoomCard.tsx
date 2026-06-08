@@ -41,7 +41,10 @@ export default function RoomCard({ habitacion, state, children }: RoomCardProps)
   const isOscuro = state.luz === 1;
 
   const lastUpdate = state.lastUpdate
-    ? new Date(state.lastUpdate).toLocaleTimeString('es-ES')
+    ? new Date(state.lastUpdate).toLocaleString('es-ES', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+      })
     : null;
 
   const isOnline = state.lastUpdate
@@ -97,9 +100,10 @@ export default function RoomCard({ habitacion, state, children }: RoomCardProps)
 
       {/* Última actualización */}
       {lastUpdate && (
-        <p className="text-xs text-gray-400 text-right">
-          Actualizado: {lastUpdate}
-        </p>
+        <div className="flex items-center justify-end gap-1.5 text-gray-500">
+          <span className="text-xs">Actualizado:</span>
+          <span className="text-sm font-semibold text-gray-700">{lastUpdate}</span>
+        </div>
       )}
     </div>
   );
