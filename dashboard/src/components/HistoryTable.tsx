@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, FileText } from 'lucide-react';
 import { fetchHistory } from '@/lib/supabase';
 import type { SensorReading, SensorType } from '@/lib/types';
 
@@ -57,6 +57,34 @@ export default function HistoryTable() {
 
   // Reset page cuando cambian filtros
   useEffect(() => { setPage(0); }, [habitacion, sensorType, from, to]);
+
+  async function exportPdf() {
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
+
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text('Historial Domótica IoT', 14, 18);
+    doc.setFontSize(10);
+    doc.setTextColor(120);
+    doc.text(`Generado: ${new Date().toLocaleString('es-ES')}  ·  ${total} registros totales`, 14, 26);
+
+    autoTable(doc, {
+      startY: 32,
+      head: [['Fecha / Hora', 'Habitación', 'Sensor', 'Valor']],
+      body: rows.map((r) => [
+        new Date(r.created_at).toLocaleString('es-ES'),
+        `Hab. ${r.habitacion}`,
+        SENSOR_LABELS[r.sensor_type],
+        `${r.valor}${SENSOR_UNITS[r.sensor_type]}`,
+      ]),
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [59, 130, 246] },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+    });
+
+    doc.save(`historial_domotica_${new Date().toISOString().slice(0, 10)}.pdf`);
+  }
 
   function exportCsv() {
     const header = 'id,fecha,habitacion,sensor,valor\n';
@@ -121,14 +149,24 @@ export default function HistoryTable() {
           />
         </div>
 
-        <button
-          onClick={exportCsv}
-          disabled={rows.length === 0}
-          className="ml-auto flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 disabled:opacity-40"
-        >
-          <Download size={15} />
-          Exportar CSV
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={exportPdf}
+            disabled={rows.length === 0}
+            className="flex items-center gap-1.5 text-sm font-medium text-red-500 hover:text-red-600 disabled:opacity-40"
+          >
+            <FileText size={15} />
+            PDF
+          </button>
+          <button
+            onClick={exportCsv}
+            disabled={rows.length === 0}
+            className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 disabled:opacity-40"
+          >
+            <Download size={15} />
+            CSV
+          </button>
+        </div>
       </div>
 
       {/* Tabla */}

@@ -43,13 +43,21 @@ export default function RoomCard({ habitacion, state }: RoomCardProps) {
     ? new Date(state.lastUpdate).toLocaleTimeString('es-ES')
     : null;
 
+  const isOnline = state.lastUpdate
+    ? Date.now() - new Date(state.lastUpdate).getTime() < 15000
+    : false;
+
   return (
     <div className={`bg-white rounded-2xl shadow-md border-2 p-5 flex flex-col gap-3 transition-all ${gasAlert ? 'border-red-400' : 'border-gray-100'}`}>
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-800">
-          Habitación {habitacion}
-        </h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-bold text-gray-800">Habitación {habitacion}</h2>
+          <span className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${isOnline ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+            {isOnline ? 'En línea' : 'Offline'}
+          </span>
+        </div>
         <div className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${isOscuro ? 'bg-indigo-100 text-indigo-700' : 'bg-yellow-100 text-yellow-700'}`}>
           {isOscuro ? <Moon size={12} /> : <Sun size={12} />}
           {isOscuro ? 'Oscuro' : 'Con luz'}

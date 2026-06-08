@@ -20,3 +20,16 @@ export interface RoomState {
 
 export const GAS_ALERT_THRESHOLD = 3000;
 export const CHART_HISTORY_LIMIT = 50;
+
+export interface SensorStats {
+  min: number;
+  max: number;
+  avg: number;
+  count: number;
+}
+
+export interface TodayStats {
+  temperatura: SensorStats | null;
+  humedad:     SensorStats | null;
+  gas:         SensorStats | null;
+}
