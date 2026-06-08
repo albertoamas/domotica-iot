@@ -9,7 +9,7 @@ export const metadata = {
 
 // Paleta verde clara — usada en todos los componentes de plantas
 export const T = {
-  pageBg:    '#f0fdf4',   // green-50, fondo general
+  pageBg:    '#dcfce7',   // green-100, fondo general
   cardBg:    '#ffffff',   // cards blancas
   cardRaise: '#f0fdf4',   // superficie elevada
   border:    '#bbf7d0',   // green-200
