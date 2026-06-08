@@ -52,32 +52,33 @@ export default function DashboardPage() {
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [notifPerm, setNotifPerm] = useState<NotificationPermission | 'unsupported'>('default');
 
-  // Evitar notificaciones duplicadas — solo notifica cuando cruza el umbral
-  const gasAlerted1 = useRef(false);
-  const gasAlerted2 = useRef(false);
+  // Timestamp de la última notificación enviada por habitación (0 = nunca)
+  const lastNotif1 = useRef(0);
+  const lastNotif2 = useRef(0);
+  const NOTIF_COOLDOWN_MS = 30_000; // 30 segundos entre notificaciones
 
   useEffect(() => {
     setNotifPerm(notificationsSupported() ? Notification.permission : 'unsupported');
   }, []);
 
-  // Vigilar cambios de gas y disparar notificación al cruzar el umbral
+  // Notifica cada vez que gas > umbral, con cooldown de 30s para no spamear
   useEffect(() => {
-    const isAlert1 = room1.gas !== null && room1.gas > GAS_ALERT_THRESHOLD;
-    if (isAlert1 && !gasAlerted1.current) {
-      gasAlerted1.current = true;
-      sendGasNotification(1, room1.gas!);
-    } else if (!isAlert1) {
-      gasAlerted1.current = false;
+    if (room1.gas !== null && room1.gas > GAS_ALERT_THRESHOLD) {
+      const now = Date.now();
+      if (now - lastNotif1.current >= NOTIF_COOLDOWN_MS) {
+        lastNotif1.current = now;
+        sendGasNotification(1, room1.gas);
+      }
     }
   }, [room1.gas]);
 
   useEffect(() => {
-    const isAlert2 = room2.gas !== null && room2.gas > GAS_ALERT_THRESHOLD;
-    if (isAlert2 && !gasAlerted2.current) {
-      gasAlerted2.current = true;
-      sendGasNotification(2, room2.gas!);
-    } else if (!isAlert2) {
-      gasAlerted2.current = false;
+    if (room2.gas !== null && room2.gas > GAS_ALERT_THRESHOLD) {
+      const now = Date.now();
+      if (now - lastNotif2.current >= NOTIF_COOLDOWN_MS) {
+        lastNotif2.current = now;
+        sendGasNotification(2, room2.gas);
+      }
     }
   }, [room2.gas]);
 
