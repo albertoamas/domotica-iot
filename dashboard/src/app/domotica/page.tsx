@@ -6,6 +6,7 @@ import type { SensorReading, RoomState } from '@/lib/types';
 import RoomCard from '@/components/RoomCard';
 import GasAlert from '@/components/GasAlert';
 import LedControl from '@/components/LedControl';
+import FanControl from '@/components/FanControl';
 
 const EMPTY_STATE: RoomState = {
   temperatura: null, humedad: null, gas: null, luz: null, lastUpdate: null,
@@ -87,14 +88,21 @@ export default function DashboardPage() {
       {loadingInitial ? (
         <div className="text-center py-20 text-gray-400">Cargando datos del servidor...</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="space-y-3">
-            <RoomCard habitacion={1} state={room1} />
-            <LedControl habitacion={1} />
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-3">
+              <RoomCard habitacion={1} state={room1} />
+              <LedControl habitacion={1} />
+            </div>
+            <div className="space-y-3">
+              <RoomCard habitacion={2} state={room2} />
+              <LedControl habitacion={2} />
+            </div>
           </div>
-          <div className="space-y-3">
-            <RoomCard habitacion={2} state={room2} />
-            <LedControl habitacion={2} />
+
+          <div className="max-w-sm">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Ventilador</p>
+            <FanControl />
           </div>
         </div>
       )}

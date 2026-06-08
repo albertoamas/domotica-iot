@@ -25,6 +25,9 @@ const char* mqtt_pass   = "Huevo0507";
 #define LUZ_PIN_2  32
 #define LED_PIN_2  14   // LED se enciende cuando LDR detecta oscuridad
 
+// ===== RELAY - VENTILADOR =====
+#define RELAY_PIN  12   // IN del módulo relay → GPIO 12
+
 #define DHTTYPE DHT11
 
 WiFiClientSecure espClient;
@@ -43,6 +46,13 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print(topic);
   Serial.print(": ");
   Serial.println(mensaje);
+
+  // Control ventilador (relay) desde el dashboard web
+  if (String(topic) == "ventilador/control") {
+    digitalWrite(RELAY_PIN, mensaje == "ON" ? HIGH : LOW);
+    Serial.print("[RELAY] Ventilador: ");
+    Serial.println(mensaje);
+  }
 
   // Control LED desde el dashboard web
   if (String(topic) == "habitacion/led/control") {
@@ -79,7 +89,8 @@ void reconnect() {
       // Suscribirse a los topics de control LED (desde el dashboard web)
       client.subscribe("habitacion/led/control");
       client.subscribe("habitacion2/led/control");
-      Serial.println("[MQTT] Suscrito a control LED");
+      client.subscribe("ventilador/control");
+      Serial.println("[MQTT] Suscrito a control LED y ventilador");
     } else {
       Serial.print("ERROR: ");
       Serial.println(client.state());
@@ -91,6 +102,10 @@ void reconnect() {
 // ===== SETUP =====
 void setup() {
   Serial.begin(115200);
+
+  // Relay ventilador
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);
 
   // Habitación 1
   pinMode(LED_PIN_1, OUTPUT);
