@@ -46,7 +46,7 @@ export function formatHoras(h: number | null): string {
 
 // Umbrales de alerta
 export const PLANT_ALERTS = {
-  TEMP_ALTA:   35,
+  TEMP_ALTA:   25,
   TEMP_BAJA:   10,
   SUELO_SECO:  25,
   SOL_EXCESO:  10,   // horas — demasiada exposición directa
