@@ -7,6 +7,7 @@ import { GAS_ALERT_THRESHOLD } from '@/lib/types';
 interface RoomCardProps {
   habitacion: 1 | 2;
   state: RoomState;
+  children?: React.ReactNode;
 }
 
 function MetricRow({
@@ -35,7 +36,7 @@ function MetricRow({
   );
 }
 
-export default function RoomCard({ habitacion, state }: RoomCardProps) {
+export default function RoomCard({ habitacion, state, children }: RoomCardProps) {
   const gasAlert = state.gas !== null && state.gas > GAS_ALERT_THRESHOLD;
   const isOscuro = state.luz === 1;
 
@@ -86,6 +87,13 @@ export default function RoomCard({ habitacion, state }: RoomCardProps) {
           danger={gasAlert}
         />
       </div>
+
+      {/* Slot para controles adicionales (ej. LedControl) */}
+      {children && (
+        <div className="border-t border-gray-100 pt-3">
+          {children}
+        </div>
+      )}
 
       {/* Última actualización */}
       {lastUpdate && (

@@ -193,14 +193,12 @@ export default function DashboardPage() {
         <div className="space-y-5">
           {/* Habitaciones */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="space-y-3">
-              <RoomCard habitacion={1} state={room1} />
+            <RoomCard habitacion={1} state={room1}>
               <LedControl habitacion={1} />
-            </div>
-            <div className="space-y-3">
-              <RoomCard habitacion={2} state={room2} />
+            </RoomCard>
+            <RoomCard habitacion={2} state={room2}>
               <LedControl habitacion={2} />
-            </div>
+            </RoomCard>
           </div>
 
           {/* Estadísticas del día */}
