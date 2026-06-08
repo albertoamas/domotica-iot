@@ -10,21 +10,31 @@ export const supabase = createClient(
 
 // Estadísticas del día (min/max/avg) para temperatura, humedad y gas
 export async function fetchTodayStats(habitacion: 1 | 2): Promise<TodayStats> {
-  const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  console.log(`[fetchTodayStats] hab=${habitacion} | local now=${new Date().toLocaleString()} | since=${startOfDay.toISOString()}`);
 
   const { data, error } = await supabase
     .from('sensor_readings')
     .select('sensor_type, valor')
     .eq('habitacion', habitacion)
-    .gte('created_at', since24h.toISOString())
+    .gte('created_at', startOfDay.toISOString())
     .in('sensor_type', ['temperatura', 'humedad', 'gas']);
 
   if (error) throw new Error(error.message);
 
+  const rows = data as { sensor_type: string; valor: number }[];
+  console.log(`[fetchTodayStats] hab=${habitacion} | total rows=${rows.length} | por tipo:`, {
+    temperatura: rows.filter(r => r.sensor_type === 'temperatura').length,
+    humedad:     rows.filter(r => r.sensor_type === 'humedad').length,
+    gas:         rows.filter(r => r.sensor_type === 'gas').length,
+  });
+
   const result: TodayStats = { temperatura: null, humedad: null, gas: null };
   const groups: Record<string, number[]> = { temperatura: [], humedad: [], gas: [] };
 
-  for (const row of data as { sensor_type: string; valor: number }[]) {
+  for (const row of rows) {
     groups[row.sensor_type]?.push(Number(row.valor));
   }
 
