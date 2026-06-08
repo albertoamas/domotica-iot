@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, BarChart2 } from 'lucide-react';
+import { LayoutDashboard, History } from 'lucide-react';
 import { PT } from '@/lib/plantTheme';
 
 const LINKS = [
-  { href: '/plantas',          label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/plantas/graficas', label: 'Gráficas',  icon: BarChart2 },
+  { href: '/plantas',           label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/plantas/historial', label: 'Historial', icon: History },
 ];
 
 export default function PlantNavLinks() {

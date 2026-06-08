@@ -72,6 +72,56 @@ export async function fetchPlantHistory(
 }
 
 
+// Horas acumuladas totales desde el primer registro (sin reinicio a medianoche)
+export async function fetchPlantTotalHours(): Promise<{
+  horas_sol: number; horas_sombra: number; horas_frio: number;
+} | null> {
+  // Buscar el primer registro de la planta
+  const { data: first } = await supabase
+    .from('plant_readings')
+    .select('created_at')
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  const since = first ? first.created_at : new Date(0).toISOString();
+
+  const { data, error } = await supabase.rpc('get_plant_computed_hours', { p_since: since });
+  if (error || !data?.[0]) return null;
+
+  const h = data[0] as { horas_sol: number; horas_sombra: number; horas_frio: number };
+  return {
+    horas_sol:    Number(h.horas_sol),
+    horas_sombra: Number(h.horas_sombra),
+    horas_frio:   Number(h.horas_frio),
+  };
+}
+
+// Historial paginado de lecturas de planta (para la tabla /plantas/historial)
+export async function fetchPlantHistoryTable(params: {
+  sensor_type?: PlantSensorType;
+  from?: string;
+  to?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<{ data: PlantReading[]; count: number }> {
+  const { sensor_type, from, to, page = 0, pageSize = 50 } = params;
+
+  let query = supabase
+    .from('plant_readings')
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(page * pageSize, (page + 1) * pageSize - 1);
+
+  if (sensor_type) query = query.eq('sensor_type', sensor_type);
+  if (from)        query = query.gte('created_at', from);
+  if (to)          query = query.lte('created_at', to);
+
+  const { data, error, count } = await query;
+  if (error) throw new Error(error.message);
+  return { data: data as PlantReading[], count: count ?? 0 };
+}
+
 // Estado actual de la planta (última lectura de cada sensor)
 // Las horas de sol/sombra/frío se calculan desde la BD (no del acumulador del ESP32)
 export async function fetchLatestPlantReadings(): Promise<PlantState> {
