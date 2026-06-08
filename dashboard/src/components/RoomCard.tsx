@@ -100,10 +100,9 @@ export default function RoomCard({ habitacion, state, children }: RoomCardProps)
 
       {/* Última actualización */}
       {lastUpdate && (
-        <div className="flex items-center justify-end gap-1.5 text-gray-500">
-          <span className="text-xs">Actualizado:</span>
-          <span className="text-sm font-semibold text-gray-700">{lastUpdate}</span>
-        </div>
+        <p className="text-xs text-gray-400 text-right">
+          Actualizado: {lastUpdate}
+        </p>
       )}
     </div>
   );
