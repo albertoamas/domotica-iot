@@ -10,14 +10,13 @@ export const supabase = createClient(
 
 // Estadísticas del día (min/max/avg) para temperatura, humedad y gas
 export async function fetchTodayStats(habitacion: 1 | 2): Promise<TodayStats> {
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
+  const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   const { data, error } = await supabase
     .from('sensor_readings')
     .select('sensor_type, valor')
     .eq('habitacion', habitacion)
-    .gte('created_at', startOfDay.toISOString())
+    .gte('created_at', since24h.toISOString())
     .in('sensor_type', ['temperatura', 'humedad', 'gas']);
 
   if (error) throw new Error(error.message);

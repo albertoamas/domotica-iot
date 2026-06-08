@@ -26,7 +26,7 @@ export default function StatsCard({ habitacion }: Props) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
       <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-        Resumen de hoy - Hab. {habitacion}
+        Últimas 24 h - Hab. {habitacion}
       </h3>
 
       <div className="space-y-3">
