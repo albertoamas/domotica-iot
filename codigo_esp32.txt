@@ -32,6 +32,13 @@ PubSubClient client(espClient);
 DHT dht1(DHTPIN_1, DHTTYPE);
 DHT dht2(DHTPIN_2, DHTTYPE);
 
+// ===== CONTROL MANUAL DE LEDS (desde dashboard) =====
+// Cuando el dashboard manda ON/OFF, el LDR deja de controlar ese LED
+bool ledManual1       = false;
+bool ledEstadoManual1 = false;
+bool ledManual2       = false;
+bool ledEstadoManual2 = false;
+
 // ===== CALLBACK MQTT =====
 void callback(char* topic, byte* payload, unsigned int length) {
   String mensaje = "";
@@ -46,13 +53,17 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   // Control LED desde el dashboard web
   if (String(topic) == "habitacion/led/control") {
-    digitalWrite(LED_PIN_1, mensaje == "ON" ? HIGH : LOW);
-    Serial.print("[LED H1] ");
+    ledManual1       = true;
+    ledEstadoManual1 = (mensaje == "ON");
+    digitalWrite(LED_PIN_1, ledEstadoManual1 ? HIGH : LOW);
+    Serial.print("[LED H1] Manual desde dashboard: ");
     Serial.println(mensaje);
   }
   if (String(topic) == "habitacion2/led/control") {
-    digitalWrite(LED_PIN_2, mensaje == "ON" ? HIGH : LOW);
-    Serial.print("[LED H2] ");
+    ledManual2       = true;
+    ledEstadoManual2 = (mensaje == "ON");
+    digitalWrite(LED_PIN_2, ledEstadoManual2 ? HIGH : LOW);
+    Serial.print("[LED H2] Manual desde dashboard: ");
     Serial.println(mensaje);
   }
 }
@@ -119,7 +130,8 @@ void setup() {
 void leerHabitacion(DHT &dht, int mq_pin, int luz_pin, int led_pin,
                     const char* topicTemp, const char* topicHum,
                     const char* topicGas,  const char* topicLuz,
-                    const char* nombre) {
+                    const char* nombre,
+                    bool ledManual, bool ledEstadoManual) {
 
   Serial.print("--- "); Serial.print(nombre); Serial.println(" ---");
 
@@ -156,14 +168,19 @@ void leerHabitacion(DHT &dht, int mq_pin, int luz_pin, int led_pin,
   // ---- LDR + LED ----
   int luz = digitalRead(luz_pin);
 
-  if (luz == 1) {
-    // LDR en oscuridad → encender LED de la habitación
-    digitalWrite(led_pin, HIGH);
-    Serial.println("[LUZ]   Estado: OSCURO → LED encendido");
+  if (ledManual) {
+    // Dashboard tiene el control — LDR no toca el LED
+    Serial.print("[LUZ]   Modo manual activo → LED ");
+    Serial.println(ledEstadoManual ? "ON (forzado)" : "OFF (forzado)");
   } else {
-    // Hay luz → apagar LED
-    digitalWrite(led_pin, LOW);
-    Serial.println("[LUZ]   Estado: HAY LUZ → LED apagado");
+    // Control automático por LDR
+    if (luz == 1) {
+      digitalWrite(led_pin, HIGH);
+      Serial.println("[LUZ]   Estado: OSCURO → LED encendido");
+    } else {
+      digitalWrite(led_pin, LOW);
+      Serial.println("[LUZ]   Estado: HAY LUZ → LED apagado");
+    }
   }
 
   char luzString[8];
@@ -183,7 +200,8 @@ void loop() {
     dht1, MQ2_PIN_1, LUZ_PIN_1, LED_PIN_1,
     "habitacion/temperatura", "habitacion/humedad",
     "habitacion/gas",         "habitacion/luz",
-    "HABITACION 1"
+    "HABITACION 1",
+    ledManual1, ledEstadoManual1
   );
 
   // Habitación 2
@@ -191,7 +209,8 @@ void loop() {
     dht2, MQ2_PIN_2, LUZ_PIN_2, LED_PIN_2,
     "habitacion2/temperatura", "habitacion2/humedad",
     "habitacion2/gas",         "habitacion2/luz",
-    "HABITACION 2"
+    "HABITACION 2",
+    ledManual2, ledEstadoManual2
   );
 
   Serial.println("====================");
