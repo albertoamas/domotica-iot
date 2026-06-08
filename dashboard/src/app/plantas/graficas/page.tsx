@@ -7,8 +7,8 @@ export default function PlantasGraficasPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Gráficas</h1>
-        <p className="text-sm mt-1" style={{ color: '#3a5c34' }}>
+        <h1 className="text-3xl font-bold tracking-tight" style={{ color: '#14532d' }}>Gráficas</h1>
+        <p className="text-sm mt-1" style={{ color: '#6b9960' }}>
           Últimos 50 registros por sensor · se actualiza cada 5 segundos
         </p>
       </div>
@@ -16,10 +16,10 @@ export default function PlantasGraficasPage() {
       {/* Ambiente */}
       <section className="space-y-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#3a5c34' }}>
+          <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#6b9960' }}>
             Ambiente
           </h2>
-          <div className="flex-1 h-px" style={{ background: '#142a10' }} />
+          <div className="flex-1 h-px" style={{ background: '#dcfce7' }} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <PlantChart sensorType="temperatura"  label="Temperatura"     color="#fb923c" unit=" °C" height={220} />
@@ -44,10 +44,10 @@ export default function PlantasGraficasPage() {
       {/* Sombra */}
       <section className="space-y-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#3a5c34' }}>
+          <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#6b9960' }}>
             Sombra acumulada
           </h2>
-          <div className="flex-1 h-px" style={{ background: '#142a10' }} />
+          <div className="flex-1 h-px" style={{ background: '#dcfce7' }} />
         </div>
         <PlantChart
           sensorType="horas_sombra"

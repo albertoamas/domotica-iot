@@ -6,14 +6,14 @@ import { sueloPercent, formatHoras } from '@/lib/plantTypes';
 
 // Paleta tierra-bosque (sincronizada con layout.tsx)
 const T = {
-  cardBg:    '#0f1c0b',
-  cardRaise: '#152612',
-  border:    '#1e3d17',
-  borderDim: '#142a10',
-  accent:    '#4ade80',
-  textHi:    '#e8f5e1',
-  textMed:   '#6b9960',
-  textDim:   '#3a5c34',
+  cardBg:    '#ffffff',
+  cardRaise: '#f0fdf4',
+  border:    '#bbf7d0',
+  borderDim: '#dcfce7',
+  accent:    '#16a34a',
+  textHi:    '#14532d',
+  textMed:   '#166534',
+  textDim:   '#6b9960',
 };
 
 interface PlantCardProps { state: PlantState }

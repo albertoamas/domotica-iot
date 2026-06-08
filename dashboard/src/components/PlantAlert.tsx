@@ -20,8 +20,8 @@ function AlertBanner({ icon, title, detail, color, bgColor }: AlertBannerProps) 
     >
       <div className="mt-0.5" style={{ color }}>{icon}</div>
       <div>
-        <p className="font-bold text-sm text-white">{title}</p>
-        <p className="text-xs mt-0.5" style={{ color: '#d1d5db' }}>{detail}</p>
+        <p className="font-bold text-sm" style={{ color }}>{title}</p>
+        <p className="text-xs mt-0.5" style={{ color: '#374151' }}>{detail}</p>
       </div>
     </div>
   );

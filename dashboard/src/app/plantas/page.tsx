@@ -11,11 +11,11 @@ import PlantAlert from '@/components/PlantAlert';
 
 // Paleta tierra-bosque (sincronizada con layout y componentes)
 const C = {
-  cardBg:    '#0f1c0b',
-  border:    '#1e3d17',
-  borderDim: '#142a10',
-  textMed:   '#6b9960',
-  textDim:   '#3a5c34',
+  cardBg:    '#ffffff',
+  border:    '#bbf7d0',
+  borderDim: '#dcfce7',
+  textMed:   '#166534',
+  textDim:   '#6b9960',
 };
 
 const EMPTY: PlantState = {
@@ -97,7 +97,7 @@ export default function PlantasPage() {
 
       {/* Título */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight" style={{ color: '#e8f5e1' }}>
+        <h1 className="text-3xl font-bold tracking-tight" style={{ color: '#14532d' }}>
           Plant Monitor
         </h1>
         <p className="text-sm mt-1" style={{ color: C.textDim }}>

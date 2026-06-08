@@ -7,19 +7,19 @@ export const metadata = {
   description: 'Monitoreo inteligente de plantas en tiempo real',
 };
 
-// Paleta tierra-bosque oscura — usada en todos los componentes de plantas
+// Paleta verde clara — usada en todos los componentes de plantas
 export const T = {
-  pageBg:    '#0b1209',   // suelo del bosque, fondo general
-  cardBg:    '#0f1c0b',   // superficie de card
-  cardRaise: '#152612',   // superficie elevada / hover
-  border:    '#1e3d17',   // borde verde bosque
-  borderDim: '#142a10',   // borde sutil
-  navBg:     '#080f07',   // header más oscuro
-  accent:    '#4ade80',   // verde brillante
-  accentDim: '#166534',   // verde oscuro para borders de acento
-  textHi:    '#e8f5e1',   // texto principal claro
-  textMed:   '#6b9960',   // texto secundario verde
-  textDim:   '#3a5c34',   // texto muy sutil
+  pageBg:    '#f0fdf4',   // green-50, fondo general
+  cardBg:    '#ffffff',   // cards blancas
+  cardRaise: '#f0fdf4',   // superficie elevada
+  border:    '#bbf7d0',   // green-200
+  borderDim: '#dcfce7',   // green-100
+  navBg:     '#ffffff',   // header blanco
+  accent:    '#16a34a',   // green-600, contrasta en fondo claro
+  accentDim: '#bbf7d0',   // green-200
+  textHi:    '#14532d',   // green-900, texto principal
+  textMed:   '#166534',   // green-800, texto secundario
+  textDim:   '#6b9960',   // texto sutil
 };
 
 export default function PlantasLayout({ children }: { children: React.ReactNode }) {
