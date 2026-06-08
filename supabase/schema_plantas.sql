@@ -28,3 +28,22 @@ CREATE POLICY "service_insert"
 --  Después habilitar Realtime:
 --  Supabase → Database → Replication → plant_readings ✓
 -- ============================================================
+
+-- ============================================================
+--  Función RPC para estadísticas de hoy (evita límite 1000 filas)
+--  Ejecutar en SQL Editor si aún no existe
+-- ============================================================
+CREATE OR REPLACE FUNCTION get_plant_today_stats(p_since timestamptz)
+RETURNS TABLE (sensor_type text, min_val numeric, max_val numeric, avg_val numeric, cnt bigint)
+LANGUAGE sql STABLE
+AS $$
+  SELECT sensor_type,
+         MIN(valor),
+         MAX(valor),
+         ROUND(AVG(valor)::numeric, 1),
+         COUNT(*)
+  FROM plant_readings
+  WHERE created_at >= p_since
+    AND sensor_type IN ('temperatura', 'humedad_aire', 'humedad_suelo')
+  GROUP BY sensor_type;
+$$;

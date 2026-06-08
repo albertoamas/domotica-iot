@@ -2,6 +2,42 @@ import { supabase } from './supabase';
 import type { PlantReading, PlantSensorType, PlantState } from './plantTypes';
 import { PLANT_CHART_LIMIT } from './plantTypes';
 
+export interface PlantSensorStats {
+  min: number; max: number; avg: number; count: number;
+}
+export interface PlantTodayStats {
+  temperatura:   PlantSensorStats | null;
+  humedad_aire:  PlantSensorStats | null;
+  humedad_suelo: PlantSensorStats | null;
+}
+
+// Requiere la función SQL get_plant_today_stats en Supabase (ver supabase/schema_plantas.sql)
+export async function fetchPlantTodayStats(): Promise<PlantTodayStats> {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase.rpc('get_plant_today_stats', {
+    p_since: startOfDay.toISOString(),
+  });
+
+  if (error) throw new Error(error.message);
+
+  const result: PlantTodayStats = { temperatura: null, humedad_aire: null, humedad_suelo: null };
+
+  for (const row of data as { sensor_type: string; min_val: number; max_val: number; avg_val: number; cnt: number }[]) {
+    const key = row.sensor_type as keyof PlantTodayStats;
+    if (!(key in result)) continue;
+    result[key] = {
+      min:   Number(row.min_val),
+      max:   Number(row.max_val),
+      avg:   Number(row.avg_val),
+      count: Number(row.cnt),
+    };
+  }
+
+  return result;
+}
+
 // Últimas N lecturas de un sensor de planta
 export async function fetchPlantHistory(
   sensor_type: PlantSensorType,

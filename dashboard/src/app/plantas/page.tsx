@@ -1,16 +1,17 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { Bell, BellOff, Thermometer, Wind } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { fetchLatestPlantReadings } from '@/lib/plantSupabase';
 import type { PlantReading, PlantState } from '@/lib/plantTypes';
-import { sueloPercent, formatHoras } from '@/lib/plantTypes';
-import { Thermometer, Wind } from 'lucide-react';
+import { sueloPercent, PLANT_ALERTS } from '@/lib/plantTypes';
 import PlantCard from '@/components/PlantCard';
 import AmbientCard from '@/components/AmbientCard';
 import PlantAlert from '@/components/PlantAlert';
+import PlantHealthWidget from '@/components/PlantHealthWidget';
+import PlantStatsCard from '@/components/PlantStatsCard';
 
-// Paleta tierra-bosque (sincronizada con layout y componentes)
 const C = {
   cardBg:    '#ffffff',
   border:    '#bbf7d0',
@@ -37,6 +38,17 @@ const HUM_ZONES = [
   { threshold: 80, color: '#60a5fa', label: 'Húmedo > 80%' },
 ];
 
+// ── Notificaciones ───────────────────────────────────────────────────────
+function notifSupported() {
+  return typeof window !== 'undefined' && 'Notification' in window;
+}
+
+function sendNotif(title: string, body: string) {
+  if (!notifSupported() || Notification.permission !== 'granted') return;
+  try { new Notification(title, { body, icon: '/favicon.ico', tag: `plant-${Date.now()}` }); }
+  catch { /* no soportado */ }
+}
+
 function SectionTitle({ children }: { children: string }) {
   return (
     <div className="flex items-center gap-3 mb-4">
@@ -48,10 +60,47 @@ function SectionTitle({ children }: { children: string }) {
   );
 }
 
-
 export default function PlantasPage() {
   const [plant, setPlant] = useState<PlantState>(EMPTY);
   const [loading, setLoading] = useState(true);
+  const [notifPerm, setNotifPerm] = useState<NotificationPermission | 'unsupported'>('default');
+
+  const lastNotifSuelo = useRef(0);
+  const lastNotifTemp  = useRef(0);
+  const COOLDOWN = 30_000;
+
+  useEffect(() => {
+    setNotifPerm(notifSupported() ? Notification.permission : 'unsupported');
+  }, []);
+
+  // Notificación suelo seco
+  useEffect(() => {
+    const sp = sueloPercent(plant.humedad_suelo);
+    if (sp !== null && sp < PLANT_ALERTS.SUELO_SECO) {
+      const now = Date.now();
+      if (now - lastNotifSuelo.current >= COOLDOWN) {
+        lastNotifSuelo.current = now;
+        sendNotif('💧 Suelo seco', `Humedad del suelo: ${sp}%. La planta necesita agua.`);
+      }
+    }
+  }, [plant.humedad_suelo]);
+
+  // Notificación temperatura
+  useEffect(() => {
+    if (plant.temperatura === null) return;
+    const alta = plant.temperatura > PLANT_ALERTS.TEMP_ALTA;
+    const baja  = plant.temperatura < PLANT_ALERTS.TEMP_BAJA;
+    if (alta || baja) {
+      const now = Date.now();
+      if (now - lastNotifTemp.current >= COOLDOWN) {
+        lastNotifTemp.current = now;
+        sendNotif(
+          alta ? '🌡️ Temperatura alta' : '❄️ Temperatura baja',
+          `Temperatura actual: ${plant.temperatura} °C.`
+        );
+      }
+    }
+  }, [plant.temperatura]);
 
   const loadInitial = useCallback(async () => {
     try { setPlant(await fetchLatestPlantReadings()); }
@@ -75,11 +124,19 @@ export default function PlantasPage() {
     return () => { clearInterval(interval); supabase.removeChannel(channel); };
   }, [loadInitial]);
 
+  async function requestNotifications() {
+    if (!notifSupported()) return;
+    try {
+      const perm = await Notification.requestPermission();
+      setNotifPerm(perm);
+    } catch { /* no soportado */ }
+  }
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-40 gap-4">
         <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
-          style={{ borderColor: '#1e3d17', borderTopColor: '#4ade80' }} />
+          style={{ borderColor: '#bbf7d0', borderTopColor: '#16a34a' }} />
         <span className="text-sm" style={{ color: C.textDim }}>Cargando datos...</span>
       </div>
     );
@@ -88,23 +145,48 @@ export default function PlantasPage() {
   return (
     <div className="space-y-8">
 
-      {/* Título */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight" style={{ color: '#14532d' }}>
-          Plant Monitor
-        </h1>
-        <p className="text-sm mt-1" style={{ color: C.textDim }}>
-          Temperatura · Humedad · Suelo · Luz acumulada — actualización cada 3s
-        </p>
+      {/* ── Título + notificaciones ── */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: '#14532d' }}>Plant Monitor</h1>
+          <p className="text-sm mt-1" style={{ color: C.textDim }}>
+            Temperatura · Humedad · Suelo · Luz acumulada — actualización cada 3s
+          </p>
+        </div>
+        <button
+          onClick={requestNotifications}
+          disabled={notifPerm === 'granted' || notifPerm === 'denied' || notifPerm === 'unsupported'}
+          className={`self-start flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-full border transition-colors whitespace-nowrap ${
+            notifPerm === 'granted'
+              ? 'bg-green-50 text-green-700 border-green-200 cursor-default'
+              : notifPerm === 'denied'
+              ? 'bg-red-50 text-red-500 border-red-200 cursor-not-allowed'
+              : notifPerm === 'unsupported'
+              ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+              : 'bg-white text-green-700 border-green-200 hover:bg-green-50'
+          }`}
+        >
+          {notifPerm === 'granted' ? <Bell size={13} /> : <BellOff size={13} />}
+          {notifPerm === 'granted'     ? 'Alertas activas'
+            : notifPerm === 'denied'  ? 'Alertas bloqueadas'
+            : notifPerm === 'unsupported' ? 'No disponible'
+            : 'Activar alertas'}
+        </button>
       </div>
 
-      {/* ── Alertas activas ── */}
+      {/* ── Alertas ── */}
       <PlantAlert state={plant} />
 
-      {/* ── Estado actual — FULL WIDTH, GRANDE ── */}
+      {/* ── Estado actual ── */}
       <section>
         <SectionTitle>Estado actual</SectionTitle>
         <PlantCard state={plant} />
+      </section>
+
+      {/* ── Salud de la planta ── */}
+      <section>
+        <SectionTitle>Salud de la planta</SectionTitle>
+        <PlantHealthWidget state={plant} />
       </section>
 
       {/* ── Condiciones ambientales ── */}
@@ -130,6 +212,12 @@ export default function PlantasPage() {
             zones={HUM_ZONES}
           />
         </div>
+      </section>
+
+      {/* ── Resumen de hoy ── */}
+      <section>
+        <SectionTitle>Resumen de hoy</SectionTitle>
+        <PlantStatsCard />
       </section>
 
     </div>
