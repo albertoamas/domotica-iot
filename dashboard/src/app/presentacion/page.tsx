@@ -11,10 +11,12 @@ import {
 /* ─── datos ─── */
 
 const SENSORES = [
-  { icon: Thermometer, color: '#f97316', bg: '#fff7ed', label: 'DHT11',      desc: 'Temperatura y humedad del aire' },
-  { icon: Flame,       color: '#ef4444', bg: '#fef2f2', label: 'MQ-2',       desc: 'Detección de gas y humo' },
-  { icon: Sun,         color: '#ca8a04', bg: '#fefce8', label: 'LDR',        desc: 'Sensor de luz ambiental' },
-  { icon: Lightbulb,   color: '#2563eb', bg: '#eff6ff', label: 'LED',        desc: 'Actuador controlable remotamente' },
+  { icon: Thermometer, color: '#f97316', bg: '#fff7ed', label: 'Temperatura',    desc: 'DHT11 — temperatura del ambiente en °C' },
+  { icon: Droplets,    color: '#3b82f6', bg: '#eff6ff', label: 'Humedad del aire',desc: 'DHT11 — humedad relativa del aire en %' },
+  { icon: Flame,       color: '#ef4444', bg: '#fef2f2', label: 'Gas / Humo',     desc: 'MQ-2 — detección de gas y humo (valor analógico)' },
+  { icon: Sun,         color: '#ca8a04', bg: '#fefce8', label: 'Luz ambiental',  desc: 'LDR — presencia de luz (oscuro / con luz)' },
+  { icon: Lightbulb,   color: '#7c3aed', bg: '#f5f3ff', label: 'LED Hab. 1',     desc: 'Actuador — controlable ON/OFF desde el dashboard' },
+  { icon: Lightbulb,   color: '#059669', bg: '#f0fdf4', label: 'LED Hab. 2',     desc: 'Actuador — controlable ON/OFF desde el dashboard' },
 ];
 
 const FEATURES = [
@@ -100,7 +102,7 @@ export default function PresentacionPage() {
             <div className="flex flex-wrap justify-center gap-4 mb-10">
               {[
                 { n: '2',  label: 'Habitaciones' },
-                { n: '4',  label: 'Sensores' },
+                { n: '6',  label: 'Sensores' },
                 { n: '2 s',label: 'Frecuencia' },
                 { n: '5',  label: 'Tecnologías' },
               ].map(({ n, label }) => (
@@ -194,7 +196,7 @@ export default function PresentacionPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {SENSORES.map(({ icon: Icon, color, bg, label, desc }) => (
                 <div key={label} className="flex items-center gap-4 p-4 rounded-2xl border border-slate-200"
                   style={{ background: bg }}>
