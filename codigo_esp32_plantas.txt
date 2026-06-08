@@ -1,0 +1,192 @@
+#include <DHT.h>
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <PubSubClient.h>
+
+// ── Credenciales WiFi ───────────────────────────────────
+const char* ssid     = "Central";
+const char* password = "f3**w12ex*p8d4mg*uimt+bgc";
+
+// ── Broker MQTT ─────────────────────────
+const char* mqtt_server = "2e3f7c0dea054e74a188513dd16fb37d.s1.eu.hivemq.cloud";
+const int   mqtt_port   = 8883;
+
+const char* mqtt_user = "CeciliaM";
+const char* mqtt_password = "Chachi1212";
+
+// ── Tópicos MQTT ────────────────────────────────────────
+#define TOPIC_TEMP        "planta/temperatura"
+#define TOPIC_HUM         "planta/humedad_aire"
+#define TOPIC_LUZ         "planta/luz_estado"
+#define TOPIC_SUELO       "planta/humedad_suelo"
+#define TOPIC_HORAS_SOL   "planta/horas_sol"
+#define TOPIC_HORAS_SOMBRA "planta/horas_sombra"
+
+// ── Pines ───────────────────────────────────────────────
+#define DHT_PIN     25
+#define LUZ_PIN     13
+#define SUELO_PIN   34
+#define LED_PIN     2
+#define DHT_TYPE    DHT11
+
+// ── Objetos ─────────────────────────────────────────────
+DHT dht(DHT_PIN, DHT_TYPE);
+WiFiClientSecure espClient;
+PubSubClient client(espClient);
+
+// ── Variables para acumulación de tiempo ────────────────
+unsigned long tiempoAnterior = 0;
+unsigned long tiempoSol = 0;
+unsigned long tiempoSombra = 0;
+
+// NOTA: Pin 13 es ADC2 — analogRead() no funciona con WiFi activo.
+// El módulo LDR digital usa DO (salida digital): 0 = hay luz, 1 = oscuro (lógica invertida).
+
+// ── Helpers ─────────────────────────────────────────────
+void conectarWiFi() {
+
+  Serial.print("[WiFi] Conectando a ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("\n[WiFi] Conectado! IP: " + WiFi.localIP().toString());
+}
+
+void conectarMQTT() {
+
+  while (!client.connected()) {
+
+    Serial.print("[MQTT] Conectando...");
+
+    String clientId = "ESP32-Sensores-" + String(random(0xffff), HEX);
+
+    if (client.connect(clientId.c_str(), mqtt_user, mqtt_password)) {
+
+      Serial.println(" conectado!");
+
+    } else {
+
+      Serial.print(" fallo, rc=");
+      Serial.print(client.state());
+      Serial.println(" → reintentando en 3s");
+
+      delay(3000);
+    }
+  }
+}
+
+void publicar(const char* topic, String valor) {
+
+  client.publish(topic, valor.c_str(), false);
+
+  Serial.print("[MQTT] Publicado → ");
+  Serial.print(topic);
+  Serial.print(" : ");
+  Serial.println(valor);
+}
+
+// ── Setup ────────────────────────────────────────────────
+void setup() {
+
+  Serial.begin(115200);
+  delay(1000);
+
+  dht.begin();
+
+  pinMode(LUZ_PIN, INPUT);
+  pinMode(LED_PIN, OUTPUT);
+
+  conectarWiFi();
+
+  espClient.setInsecure();
+
+  client.setServer(mqtt_server, mqtt_port);
+
+  Serial.println("\n========================================");
+  Serial.println("  Planta Inteligente — Sensores → MQTT");
+  Serial.println("========================================\n");
+}
+
+// ── Loop ─────────────────────────────────────────────────
+void loop() {
+
+  if (!client.connected()) {
+    conectarMQTT();
+  }
+
+  client.loop();
+
+  float temperatura = dht.readTemperature();
+  float humedad = dht.readHumidity();
+
+  int luzDigital = digitalRead(LUZ_PIN);   // DO del módulo LDR digital
+  int sueloRaw   = analogRead(SUELO_PIN);
+
+  Serial.println("-------- Lectura --------");
+
+  // ── DHT11 ─────────────────────────────────────────────
+  if (isnan(temperatura) || isnan(humedad)) {
+
+    Serial.println("[DHT11] ERROR: fallo de lectura");
+
+  } else {
+
+    publicar(TOPIC_TEMP, String(temperatura, 1));
+    publicar(TOPIC_HUM, String(humedad, 1));
+  }
+
+  // ── Lógica de luz ─────────────────────────────────────
+  // La mayoría de módulos LDR digitales tienen lógica invertida:
+  //   DO = 0 → hay luz (fotodiodo activo)
+  //   DO = 1 → oscuridad
+  // Si tu módulo es al revés, cambia (luzDigital == 0) por (luzDigital == 1)
+  bool hayLuz = (luzDigital == 0);
+
+  publicar(TOPIC_LUZ, String(hayLuz ? "1" : "0"));
+
+  Serial.print("[LUZ]   DO pin: ");
+  Serial.print(luzDigital);
+  Serial.println(hayLuz ? "  → HAY LUZ" : "  → OSCURO");
+
+  // LED: encendido si hay luz
+  if (hayLuz) {
+    digitalWrite(LED_PIN, HIGH);
+  } else {
+    digitalWrite(LED_PIN, LOW);
+  }
+
+  // ── Acumulación de tiempo ─────────────────────────────
+  unsigned long tiempoActual = millis();
+  unsigned long delta = tiempoActual - tiempoAnterior;
+  tiempoAnterior = tiempoActual;
+
+  if (hayLuz) {
+    tiempoSol += delta;
+  } else {
+    tiempoSombra += delta;
+  }
+
+  // ── Conversión a horas ────────────────────────────────
+  float horasSol = tiempoSol / 3600000.0;
+  float horasSombra = tiempoSombra / 3600000.0;
+
+  publicar(TOPIC_HORAS_SOL, String(horasSol, 4));
+  publicar(TOPIC_HORAS_SOMBRA, String(horasSombra, 4));
+
+  // ── Humedad del suelo ─────────────────────────────────
+  publicar(TOPIC_SUELO, String(sueloRaw));
+
+  // Debug suelo
+  Serial.print("[SUELO] RAW: ");
+  Serial.println(sueloRaw);
+
+  Serial.println();
+
+  delay(2000);
+}

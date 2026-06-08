@@ -44,17 +44,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print(": ");
   Serial.println(mensaje);
 
-  // Control LED desde el dashboard web
-  if (String(topic) == "habitacion/led/control") {
-    digitalWrite(LED_PIN_1, mensaje == "ON" ? HIGH : LOW);
-    Serial.print("[LED H1] ");
-    Serial.println(mensaje);
-  }
-  if (String(topic) == "habitacion2/led/control") {
-    digitalWrite(LED_PIN_2, mensaje == "ON" ? HIGH : LOW);
-    Serial.print("[LED H2] ");
-    Serial.println(mensaje);
-  }
+  // Puedes agregar aquí otros comandos MQTT si lo necesitas en el futuro
 }
 
 // ===== WIFI =====
@@ -76,10 +66,6 @@ void reconnect() {
     Serial.print("Conectando MQTT HiveMQ... ");
     if (client.connect("ESP32Cliente", mqtt_user, mqtt_pass)) {
       Serial.println("CONECTADO");
-      // Suscribirse a los topics de control LED (desde el dashboard web)
-      client.subscribe("habitacion/led/control");
-      client.subscribe("habitacion2/led/control");
-      Serial.println("[MQTT] Suscrito a control LED");
     } else {
       Serial.print("ERROR: ");
       Serial.println(client.state());
@@ -147,7 +133,7 @@ void leerHabitacion(DHT &dht, int mq_pin, int luz_pin, int led_pin,
   int gas = analogRead(mq_pin);
   Serial.print("[MQ2]   Valor: ");
   Serial.print(gas);
-  Serial.println(gas > 3000 ? "  ⚠ Gas/humo elevado" : "  Normal");
+  Serial.println(gas > 1000 ? "  ⚠ Gas/humo elevado" : "  Normal");
 
   char gasString[8];
   itoa(gas, gasString, 10);
