@@ -67,7 +67,7 @@ export default function PlantasPage() {
     const interval = setInterval(async () => {
       try { setPlant(await fetchLatestPlantReadings()); }
       catch { /* silencioso */ }
-    }, 3000);
+    }, 2000);
     const channel = supabase
       .channel('plantas-realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'plant_readings' }, (payload) => {
