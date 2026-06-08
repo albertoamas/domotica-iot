@@ -25,11 +25,6 @@ const char* mqtt_pass   = "Huevo0507";
 #define LUZ_PIN_2  32
 #define LED_PIN_2  14   // LED se enciende cuando LDR detecta oscuridad
 
-// ===== RELAY - VENTILADOR =====
-// GPIO 13: libre, no es strapping pin (evitar GPIO 0, 2, 5, 12, 15)
-// La mayoría de módulos relay son ACTIVO LOW: LOW=encendido, HIGH=apagado
-#define RELAY_PIN  13
-
 #define DHTTYPE DHT11
 
 WiFiClientSecure espClient;
@@ -48,14 +43,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print(topic);
   Serial.print(": ");
   Serial.println(mensaje);
-
-  // Control ventilador (relay) desde el dashboard web
-  // Activo LOW: ON→LOW activa el relay, OFF→HIGH lo desactiva
-  if (String(topic) == "ventilador/control") {
-    digitalWrite(RELAY_PIN, mensaje == "ON" ? LOW : HIGH);
-    Serial.print("[RELAY] Ventilador: ");
-    Serial.println(mensaje);
-  }
 
   // Control LED desde el dashboard web
   if (String(topic) == "habitacion/led/control") {
@@ -92,8 +79,7 @@ void reconnect() {
       // Suscribirse a los topics de control LED (desde el dashboard web)
       client.subscribe("habitacion/led/control");
       client.subscribe("habitacion2/led/control");
-      client.subscribe("ventilador/control");
-      Serial.println("[MQTT] Suscrito a control LED y ventilador");
+      Serial.println("[MQTT] Suscrito a control LED");
     } else {
       Serial.print("ERROR: ");
       Serial.println(client.state());
@@ -105,10 +91,6 @@ void reconnect() {
 // ===== SETUP =====
 void setup() {
   Serial.begin(115200);
-
-  // Relay ventilador — HIGH = apagado (activo LOW)
-  pinMode(RELAY_PIN, OUTPUT);
-  digitalWrite(RELAY_PIN, HIGH);
 
   // Habitación 1
   pinMode(LED_PIN_1, OUTPUT);
