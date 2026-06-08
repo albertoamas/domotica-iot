@@ -6,11 +6,14 @@ interface GaugeChartProps {
   value: number | null;
   min: number;
   max: number;
-  label: string;   // nombre del sensor, ej: "Temperatura"
-  unit: string;    // unidad de medida, ej: "°C"
+  label: string;
+  unit: string;
   color: string;
   size?: number;
   zones?: { threshold: number; color: string }[];
+  trackColor?: string;
+  labelColor?: string;
+  minMaxColor?: string;
 }
 
 function getZoneColor(value: number, zones: { threshold: number; color: string }[], defaultColor: string): string {
@@ -22,7 +25,7 @@ function getZoneColor(value: number, zones: { threshold: number; color: string }
 
 export default function GaugeChart({
   value, min, max, label, unit, color, size = 220,
-  zones = [],
+  zones = [], trackColor, labelColor, minMaxColor,
 }: GaugeChartProps) {
   const pct        = value !== null ? Math.min(Math.max((value - min) / (max - min), 0), 1) : 0;
   const filled     = pct * 100;
@@ -31,7 +34,7 @@ export default function GaugeChart({
     ? getZoneColor(value, zones, color)
     : color;
 
-  const TRACK = '#1a3314';
+  const TRACK = trackColor ?? '#1a3314';
   const cx    = size / 2;
   // Subimos el centro del arco para que el número quede holgado debajo
   const cy    = size * 0.52;
@@ -89,7 +92,7 @@ export default function GaugeChart({
           }}>
             {value !== null ? value : '—'}
           </span>
-          <span style={{ fontSize: size * 0.08, color: '#4a7c40', marginTop: 4 }}>
+          <span style={{ fontSize: size * 0.08, color: labelColor ?? '#4a7c40', marginTop: 4 }}>
             {unit}
           </span>
         </div>
@@ -103,8 +106,8 @@ export default function GaugeChart({
         alignItems: 'center',
         marginTop: -8,
       }}>
-        <span style={{ fontSize: 11, color: '#3a5c34' }}>{min}{unit}</span>
-        <span style={{ fontSize: 11, color: '#3a5c34' }}>{max}{unit}</span>
+        <span style={{ fontSize: 11, color: minMaxColor ?? '#3a5c34' }}>{min}{unit}</span>
+        <span style={{ fontSize: 11, color: minMaxColor ?? '#3a5c34' }}>{max}{unit}</span>
       </div>
     </div>
   );
