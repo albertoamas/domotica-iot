@@ -30,13 +30,20 @@ function applyReading(prev: RoomState, row: SensorReading): RoomState {
   return { ...prev, [row.sensor_type]: row.valor, lastUpdate: row.created_at };
 }
 
+function notificationsSupported() {
+  return typeof window !== 'undefined' && 'Notification' in window;
+}
+
 function sendGasNotification(habitacion: number, gasValue: number) {
-  if (typeof window === 'undefined' || Notification.permission !== 'granted') return;
-  new Notification(`⚠ Gas elevado — Habitación ${habitacion}`, {
-    body: `Nivel: ${gasValue} (umbral: ${GAS_ALERT_THRESHOLD}). Ventila el ambiente.`,
-    icon: '/favicon.ico',
-    tag: `gas-h${habitacion}`,
-  });
+  if (!notificationsSupported()) return;
+  if (Notification.permission !== 'granted') return;
+  try {
+    new Notification(`⚠ Gas elevado — Habitación ${habitacion}`, {
+      body: `Nivel: ${gasValue} (umbral: ${GAS_ALERT_THRESHOLD}). Ventila el ambiente.`,
+      icon: '/favicon.ico',
+      tag: `gas-h${habitacion}`,
+    });
+  } catch { /* Safari puede rechazarlo silenciosamente */ }
 }
 
 export default function DashboardPage() {
@@ -50,11 +57,7 @@ export default function DashboardPage() {
   const gasAlerted2 = useRef(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      setNotifPerm(Notification.permission);
-    } else {
-      setNotifPerm('unsupported');
-    }
+    setNotifPerm(notificationsSupported() ? Notification.permission : 'unsupported');
   }, []);
 
   // Vigilar cambios de gas y disparar notificación al cruzar el umbral
@@ -79,9 +82,11 @@ export default function DashboardPage() {
   }, [room2.gas]);
 
   async function requestNotifications() {
-    if (typeof window === 'undefined' || !('Notification' in window)) return;
-    const perm = await Notification.requestPermission();
-    setNotifPerm(perm);
+    if (!notificationsSupported()) return;
+    try {
+      const perm = await Notification.requestPermission();
+      setNotifPerm(perm);
+    } catch { /* no soportado */ }
   }
 
   const loadInitial = useCallback(async () => {
