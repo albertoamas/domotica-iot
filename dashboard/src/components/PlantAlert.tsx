@@ -14,10 +14,32 @@ interface AlertDef {
   detail: string;
 }
 
-const STYLE: Record<Priority, { leftBorder: string; tint: string; pill: string; pillText: string; iconColor: string; titleColor: string }> = {
-  critica:     { leftBorder: '#d9534f', tint: 'rgba(217,83,79,0.06)',  pill: '#d9534f', pillText: '#fff',     iconColor: '#d9534f', titleColor: '#8b1a18' },
-  advertencia: { leftBorder: '#c8901c', tint: 'rgba(224,169,46,0.07)', pill: '#c8901c', pillText: '#fff',     iconColor: '#c8901c', titleColor: '#7a5810' },
-  informativa: { leftBorder: PT.green,  tint: 'rgba(92,138,46,0.06)',  pill: PT.green,  pillText: '#fff',     iconColor: PT.green,  titleColor: PT.greenDeep },
+const STYLE: Record<Priority, {
+  bg: string; border: string; iconBg: string; iconColor: string;
+  titleColor: string; detailColor: string; pillBg: string; pillText: string;
+  pulse: boolean;
+}> = {
+  critica: {
+    bg: '#fff0f0', border: '#f5a0a0',
+    iconBg: '#dc2626', iconColor: '#fff',
+    titleColor: '#991b1b', detailColor: '#b91c1c',
+    pillBg: '#dc2626', pillText: '#fff',
+    pulse: true,
+  },
+  advertencia: {
+    bg: '#fffbeb', border: '#fcd34d',
+    iconBg: '#d97706', iconColor: '#fff',
+    titleColor: '#92400e', detailColor: '#b45309',
+    pillBg: '#d97706', pillText: '#fff',
+    pulse: false,
+  },
+  informativa: {
+    bg: '#f0fdf4', border: '#86efac',
+    iconBg: PT.green, iconColor: '#fff',
+    titleColor: PT.greenDeep, detailColor: PT.green,
+    pillBg: PT.green, pillText: '#fff',
+    pulse: false,
+  },
 };
 
 const PRIORITY_ORDER: Priority[] = ['critica', 'advertencia', 'informativa'];
@@ -26,26 +48,34 @@ function AlertBanner({ priority, icon, title, detail }: AlertDef) {
   const s = STYLE[priority];
   const PriorityIcon = priority === 'critica' ? AlertTriangle : priority === 'advertencia' ? AlertTriangle : Info;
   return (
-    <div className="flex items-start gap-3 rounded-2xl px-4 py-3.5 overflow-hidden"
+    <div className="flex items-center gap-4 rounded-2xl px-4 py-4"
       style={{
-        background: PT.card,
-        boxShadow: PT.shadow,
-        borderLeft: `4px solid ${s.leftBorder}`,
-        borderTop: `1px solid ${PT.border}`,
-        borderRight: `1px solid ${PT.border}`,
-        borderBottom: `1px solid ${PT.border}`,
-        backgroundImage: `linear-gradient(to right, ${s.tint}, transparent 40%)`,
+        background: s.bg,
+        border: `1.5px solid ${s.border}`,
+        boxShadow: `0 4px 16px ${s.border}60`,
       }}>
-      <div className="flex items-center gap-1.5 mt-0.5 shrink-0">
-        <PriorityIcon size={15} style={{ color: s.iconColor }} />
-        <span style={{ color: s.iconColor }}>{icon}</span>
+
+      {/* Icono en círculo sólido */}
+      <div className="relative shrink-0">
+        {s.pulse && (
+          <span className="absolute inset-0 rounded-full animate-ping"
+            style={{ background: s.iconBg, opacity: 0.35 }} />
+        )}
+        <div className="w-11 h-11 rounded-full flex items-center justify-center relative"
+          style={{ background: s.iconBg }}>
+          <PriorityIcon size={20} style={{ color: s.iconColor }} strokeWidth={2.5} />
+        </div>
       </div>
+
+      {/* Texto */}
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-sm" style={{ color: s.titleColor }}>{title}</p>
-        <p className="text-xs mt-0.5" style={{ color: PT.textMed }}>{detail}</p>
+        <p className="font-extrabold text-sm leading-tight" style={{ color: s.titleColor }}>{title}</p>
+        <p className="text-xs mt-1 leading-relaxed" style={{ color: s.detailColor }}>{detail}</p>
       </div>
-      <span className="text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0 self-start mt-0.5"
-        style={{ background: s.pill, color: s.pillText }}>
+
+      {/* Badge */}
+      <span className="text-xs font-bold px-3 py-1 rounded-full shrink-0 uppercase tracking-wide"
+        style={{ background: s.pillBg, color: s.pillText }}>
         {priority === 'critica' ? 'Crítica' : priority === 'advertencia' ? 'Aviso' : 'Info'}
       </span>
     </div>
