@@ -125,8 +125,8 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Título + botón de notificaciones */}
-      <div className="flex items-start justify-between">
+      {/* Título */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Dashboard en Tiempo Real</h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -134,22 +134,29 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {notifPerm !== 'unsupported' && (
-          <button
-            onClick={requestNotifications}
-            disabled={notifPerm === 'granted'}
-            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
-              notifPerm === 'granted'
-                ? 'bg-green-50 text-green-700 border-green-200 cursor-default'
-                : notifPerm === 'denied'
-                ? 'bg-red-50 text-red-500 border-red-200 cursor-not-allowed'
-                : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'
-            }`}
-          >
-            {notifPerm === 'granted' ? <Bell size={13} /> : <BellOff size={13} />}
-            {notifPerm === 'granted' ? 'Notificaciones activas' : notifPerm === 'denied' ? 'Notificaciones bloqueadas' : 'Activar notificaciones'}
-          </button>
-        )}
+        {/* Botón notificaciones — siempre visible */}
+        <button
+          onClick={requestNotifications}
+          disabled={notifPerm === 'granted' || notifPerm === 'denied' || notifPerm === 'unsupported'}
+          className={`self-start flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-full border transition-colors whitespace-nowrap ${
+            notifPerm === 'granted'
+              ? 'bg-green-50 text-green-700 border-green-200 cursor-default'
+              : notifPerm === 'denied'
+              ? 'bg-red-50 text-red-500 border-red-200 cursor-not-allowed'
+              : notifPerm === 'unsupported'
+              ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+              : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'
+          }`}
+        >
+          {notifPerm === 'granted' ? <Bell size={13} /> : <BellOff size={13} />}
+          {notifPerm === 'granted'
+            ? 'Notificaciones activas'
+            : notifPerm === 'denied'
+            ? 'Notificaciones bloqueadas'
+            : notifPerm === 'unsupported'
+            ? 'No disponible en Safari'
+            : 'Activar notificaciones'}
+        </button>
       </div>
 
       {/* Alertas de gas */}
