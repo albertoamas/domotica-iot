@@ -1,4 +1,5 @@
-import { Leaf } from 'lucide-react';
+import Link from 'next/link';
+import { Leaf, ArrowLeft } from 'lucide-react';
 import PlantNavLinks from './PlantNavLinks';
 
 export const metadata = {
@@ -27,7 +28,14 @@ export default function PlantasLayout({ children }: { children: React.ReactNode 
       <header style={{ background: T.navBg, borderBottom: `1px solid ${T.border}` }}
         className="sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="flex items-center gap-1 text-xs hover:opacity-80 transition-opacity"
+              style={{ color: T.textDim }}>
+              <ArrowLeft size={13} />
+              Proyectos
+            </Link>
+            <div className="w-px h-5" style={{ background: T.border }} />
+            <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ background: 'rgba(74,222,128,0.12)', border: `1px solid ${T.accentDim}` }}>
               <Leaf size={16} style={{ color: T.accent }} />
@@ -40,6 +48,7 @@ export default function PlantasLayout({ children }: { children: React.ReactNode 
                 style={{ background: 'rgba(74,222,128,0.1)', color: T.accent, border: `1px solid ${T.accentDim}` }}>
                 LIVE
               </span>
+            </div>
             </div>
           </div>
           <PlantNavLinks />
