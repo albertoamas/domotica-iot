@@ -33,3 +33,17 @@ export interface TodayStats {
   humedad:     SensorStats | null;
   gas:         SensorStats | null;
 }
+
+export interface LedState {
+  habitacion: Habitacion;
+  estado: 'ON' | 'OFF';
+  updated_at: string;
+}
+
+export interface GasAlertEvent {
+  id: number;
+  habitacion: Habitacion;
+  started_at: string;
+  ended_at: string | null;
+  max_valor: number;
+}

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Lightbulb, Loader2 } from 'lucide-react';
+import { fetchLedState } from '@/lib/supabase';
 
 interface LedControlProps {
   habitacion: 1 | 2;
@@ -9,12 +10,21 @@ interface LedControlProps {
 
 export default function LedControl({ habitacion }: LedControlProps) {
   const [estado, setEstado] = useState<'ON' | 'OFF'>('OFF');
-  const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
+  const [toggling, setToggling] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Carga el estado real del LED desde Supabase al montar
+  useEffect(() => {
+    fetchLedState(habitacion)
+      .then(setEstado)
+      .catch(() => {/* fallback a OFF */})
+      .finally(() => setInitializing(false));
+  }, [habitacion]);
 
   async function toggleLed() {
     const nuevoEstado = estado === 'ON' ? 'OFF' : 'ON';
-    setLoading(true);
+    setToggling(true);
     setError(null);
 
     try {
@@ -33,11 +43,12 @@ export default function LedControl({ habitacion }: LedControlProps) {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al enviar comando');
     } finally {
-      setLoading(false);
+      setToggling(false);
     }
   }
 
   const isOn = estado === 'ON';
+  const busy = initializing || toggling;
 
   return (
     <div className="flex items-center justify-between bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
@@ -58,13 +69,13 @@ export default function LedControl({ habitacion }: LedControlProps) {
         )}
         <button
           onClick={toggleLed}
-          disabled={loading}
-          className={`relative inline-flex h-7 w-13 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 ${
+          disabled={busy}
+          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 ${
             isOn ? 'bg-yellow-400 focus:ring-yellow-400' : 'bg-gray-300 focus:ring-gray-400'
-          } disabled:opacity-60 w-12`}
+          } disabled:opacity-60`}
           aria-label={`Luz Habitación ${habitacion}: ${estado}`}
         >
-          {loading ? (
+          {busy ? (
             <Loader2 size={12} className="absolute left-1/2 -translate-x-1/2 animate-spin text-white" />
           ) : (
             <span
@@ -75,7 +86,7 @@ export default function LedControl({ habitacion }: LedControlProps) {
           )}
         </button>
         <span className={`text-xs font-semibold w-6 ${isOn ? 'text-yellow-600' : 'text-gray-400'}`}>
-          {estado}
+          {initializing ? '···' : estado}
         </span>
       </div>
     </div>

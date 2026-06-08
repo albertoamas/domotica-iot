@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { SensorReading, SensorStats, TodayStats } from './types';
+import type { SensorReading, SensorStats, TodayStats, LedState, GasAlertEvent } from './types';
 
 // Fallback a placeholder para que `next build` no falle sin env vars.
 // En producción (Railway/Vercel) siempre estarán definidas.
@@ -83,6 +83,45 @@ export async function fetchLatestReadings(
   return results
     .filter((r) => r.data !== null)
     .map((r) => r.data as SensorReading);
+}
+
+// Estado actual del LED de una habitación
+export async function fetchLedState(habitacion: 1 | 2): Promise<'ON' | 'OFF'> {
+  const { data, error } = await supabase
+    .from('led_states')
+    .select('estado')
+    .eq('habitacion', habitacion)
+    .single();
+  if (error || !data) return 'OFF';
+  return (data as LedState).estado;
+}
+
+// Persiste el estado del LED (llamado desde la API route tras publicar MQTT)
+export async function upsertLedState(habitacion: 1 | 2, estado: 'ON' | 'OFF'): Promise<void> {
+  await supabase
+    .from('led_states')
+    .upsert({ habitacion, estado, updated_at: new Date().toISOString() });
+}
+
+// Historial de alertas de gas con paginación y filtro de habitación
+export async function fetchGasAlerts(params: {
+  habitacion?: 1 | 2;
+  page?: number;
+  pageSize?: number;
+}): Promise<{ data: GasAlertEvent[]; count: number }> {
+  const { habitacion, page = 0, pageSize = 20 } = params;
+
+  let query = supabase
+    .from('gas_alerts')
+    .select('*', { count: 'exact' })
+    .order('started_at', { ascending: false })
+    .range(page * pageSize, (page + 1) * pageSize - 1);
+
+  if (habitacion) query = query.eq('habitacion', habitacion);
+
+  const { data, error, count } = await query;
+  if (error) throw new Error(error.message);
+  return { data: data as GasAlertEvent[], count: count ?? 0 };
 }
 
 // Historial paginado con filtros (para la página /historial)

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as mqtt from 'mqtt';
+import { upsertLedState } from '@/lib/supabase';
 
 // Mantener una conexión MQTT reutilizable durante el ciclo de vida del servidor
 let mqttClient: mqtt.MqttClient | null = null;
@@ -69,6 +70,9 @@ export async function POST(req: NextRequest) {
         else resolve();
       });
     });
+
+    // Persistir estado en Supabase (fire-and-forget, no bloquea la respuesta)
+    upsertLedState(habitacion as 1 | 2, estado as 'ON' | 'OFF').catch(() => {});
 
     return NextResponse.json({ ok: true, topic, estado });
   } catch (err) {

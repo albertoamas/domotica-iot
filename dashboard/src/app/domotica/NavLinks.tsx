@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BarChart2, History } from 'lucide-react';
+import { Home, BarChart2, History, Flame } from 'lucide-react';
 
 const LINKS = [
   { href: '/domotica',           label: 'Dashboard', icon: Home      },
   { href: '/domotica/graficas',  label: 'Gráficas',  icon: BarChart2 },
   { href: '/domotica/historial', label: 'Historial', icon: History   },
+  { href: '/domotica/eventos',   label: 'Eventos',   icon: Flame     },
 ];
 
 export default function NavLinks() {
