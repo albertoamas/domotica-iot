@@ -147,7 +147,7 @@ void leerHabitacion(DHT &dht, int mq_pin, int luz_pin, int led_pin,
   int gas = analogRead(mq_pin);
   Serial.print("[MQ2]   Valor: ");
   Serial.print(gas);
-  Serial.println(gas > 3000 ? "  ⚠ Gas/humo elevado" : "  Normal");
+  Serial.println(gas > 2000 ? "  ⚠ Gas/humo elevado" : "  Normal");
 
   char gasString[8];
   itoa(gas, gasString, 10);
