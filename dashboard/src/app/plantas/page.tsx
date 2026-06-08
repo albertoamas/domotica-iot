@@ -11,13 +11,14 @@ import PlantAlert from '@/components/PlantAlert';
 import PlantHealthWidget from '@/components/PlantHealthWidget';
 import PlantStatsCard from '@/components/PlantStatsCard';
 import PlantAssistant from '@/components/PlantAssistant';
+import { PT, SENSOR } from '@/lib/plantTheme';
 
 const C = {
-  cardBg:    '#ffffff',
-  border:    '#bbf7d0',
-  borderDim: '#dcfce7',
-  textMed:   '#166534',
-  textDim:   '#6b9960',
+  cardBg:    PT.card,
+  border:    PT.border,
+  borderDim: 'rgba(242,232,213,0.18)',
+  textMed:   PT.textNav,
+  textDim:   PT.textNavDim,
 };
 
 const EMPTY: PlantState = {
@@ -27,16 +28,16 @@ const EMPTY: PlantState = {
 };
 
 const TEMP_ZONES = [
-  { threshold: 0,  color: '#818cf8', label: 'Frío < 15°C' },
-  { threshold: 15, color: '#4ade80', label: 'Ideal 15–30°C' },
-  { threshold: 30, color: '#fbbf24', label: 'Caliente 30–38°C' },
-  { threshold: 38, color: '#f87171', label: 'Crítico > 38°C' },
+  { threshold: 0,  color: SENSOR.cold,  label: 'Frío < 15°C' },
+  { threshold: 15, color: SENSOR.soil,  label: 'Ideal 15–30°C' },
+  { threshold: 30, color: SENSOR.sun,   label: 'Caliente 30–38°C' },
+  { threshold: 38, color: '#d9534f',    label: 'Crítico > 38°C' },
 ];
 const HUM_ZONES = [
-  { threshold: 0,  color: '#f87171', label: 'Muy seco < 30%' },
-  { threshold: 30, color: '#fbbf24', label: 'Bajo 30–50%' },
-  { threshold: 50, color: '#4ade80', label: 'Ideal 50–80%' },
-  { threshold: 80, color: '#60a5fa', label: 'Húmedo > 80%' },
+  { threshold: 0,  color: '#d9534f',    label: 'Muy seco < 30%' },
+  { threshold: 30, color: SENSOR.sun,   label: 'Bajo 30–50%' },
+  { threshold: 50, color: SENSOR.soil,  label: 'Ideal 50–80%' },
+  { threshold: 80, color: SENSOR.hum,   label: 'Húmedo > 80%' },
 ];
 
 
@@ -83,7 +84,7 @@ export default function PlantasPage() {
     return (
       <div className="flex flex-col items-center justify-center py-40 gap-4">
         <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
-          style={{ borderColor: '#bbf7d0', borderTopColor: '#16a34a' }} />
+          style={{ borderColor: 'rgba(242,232,213,0.25)', borderTopColor: PT.grass }} />
         <span className="text-sm" style={{ color: C.textDim }}>Cargando datos...</span>
       </div>
     );
@@ -94,7 +95,7 @@ export default function PlantasPage() {
 
       {/* ── Título ── */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight" style={{ color: '#14532d' }}>Plant Monitor</h1>
+        <h1 className="text-3xl font-bold tracking-tight" style={{ color: PT.textNav }}>Plant Monitor</h1>
         <p className="text-sm mt-1" style={{ color: C.textDim }}>
           Temperatura · Humedad · Suelo · Luz acumulada — actualización cada 3s
         </p>

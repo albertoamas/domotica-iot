@@ -3,6 +3,7 @@
 import { AlertTriangle, Info, Thermometer, Droplets, Sun, Moon } from 'lucide-react';
 import type { PlantState } from '@/lib/plantTypes';
 import { PLANT_ALERTS, sueloPercent } from '@/lib/plantTypes';
+import { PT } from '@/lib/plantTheme';
 
 type Priority = 'critica' | 'advertencia' | 'informativa';
 
@@ -13,10 +14,10 @@ interface AlertDef {
   detail: string;
 }
 
-const STYLE: Record<Priority, { bg: string; border: string; iconColor: string; titleColor: string }> = {
-  critica:     { bg: 'rgba(239,68,68,0.08)',    border: '#fca5a5', iconColor: '#ef4444', titleColor: '#991b1b' },
-  advertencia: { bg: 'rgba(245,158,11,0.08)',   border: '#fcd34d', iconColor: '#f59e0b', titleColor: '#92400e' },
-  informativa: { bg: 'rgba(22,163,74,0.07)',    border: '#86efac', iconColor: '#16a34a', titleColor: '#14532d' },
+const STYLE: Record<Priority, { bg: string; border: string; pill: string; iconColor: string; titleColor: string }> = {
+  critica:     { bg: 'rgba(217,83,79,0.1)',   border: 'rgba(217,83,79,0.5)',   pill: 'rgba(217,83,79,0.22)',  iconColor: '#d9534f', titleColor: '#a23c38' },
+  advertencia: { bg: 'rgba(224,169,46,0.12)', border: 'rgba(224,169,46,0.55)', pill: 'rgba(224,169,46,0.25)', iconColor: '#c8901c', titleColor: '#8a6614' },
+  informativa: { bg: PT.greenSoft,            border: 'rgba(92,138,46,0.4)',   pill: 'rgba(92,138,46,0.2)',   iconColor: PT.green,  titleColor: PT.greenDeep },
 };
 
 const PRIORITY_ORDER: Priority[] = ['critica', 'advertencia', 'informativa'];
@@ -25,18 +26,18 @@ function AlertBanner({ priority, icon, title, detail }: AlertDef) {
   const s = STYLE[priority];
   const PriorityIcon = priority === 'critica' ? AlertTriangle : priority === 'advertencia' ? AlertTriangle : Info;
   return (
-    <div className="flex items-start gap-3 rounded-xl px-4 py-3"
-      style={{ background: s.bg, border: `1px solid ${s.border}` }}>
+    <div className="flex items-start gap-3 rounded-2xl px-4 py-3.5"
+      style={{ background: s.bg, border: `1px solid ${s.border}`, boxShadow: PT.shadowSm }}>
       <div className="flex items-center gap-1.5 mt-0.5 shrink-0">
-        <PriorityIcon size={14} style={{ color: s.iconColor }} />
+        <PriorityIcon size={15} style={{ color: s.iconColor }} />
         <span style={{ color: s.iconColor }}>{icon}</span>
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-bold text-sm" style={{ color: s.titleColor }}>{title}</p>
-        <p className="text-xs mt-0.5" style={{ color: '#4b5563' }}>{detail}</p>
+        <p className="text-xs mt-0.5" style={{ color: PT.textMed }}>{detail}</p>
       </div>
-      <span className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 self-start mt-0.5"
-        style={{ background: s.border + '55', color: s.titleColor }}>
+      <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full shrink-0 self-start mt-0.5"
+        style={{ background: s.pill, color: s.titleColor }}>
         {priority === 'critica' ? 'Crítica' : priority === 'advertencia' ? 'Aviso' : 'Info'}
       </span>
     </div>

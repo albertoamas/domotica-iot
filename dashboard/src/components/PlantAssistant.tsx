@@ -3,6 +3,7 @@
 import { Lightbulb, Droplets, Thermometer, Sun, Wind, Leaf } from 'lucide-react';
 import type { PlantState } from '@/lib/plantTypes';
 import { sueloPercent, calcHealthScore } from '@/lib/plantTypes';
+import { PT } from '@/lib/plantTheme';
 
 interface Tip {
   priority: 'alta' | 'media' | 'baja';
@@ -12,9 +13,9 @@ interface Tip {
 }
 
 const STYLE = {
-  alta:  { bg: 'rgba(239,68,68,0.07)',   border: '#fca5a5', dot: '#ef4444', title: '#991b1b' },
-  media: { bg: 'rgba(245,158,11,0.07)',  border: '#fcd34d', dot: '#f59e0b', title: '#92400e' },
-  baja:  { bg: 'rgba(22,163,74,0.07)',   border: '#86efac', dot: '#16a34a', title: '#14532d' },
+  alta:  { bg: 'rgba(217,83,79,0.07)',   border: 'rgba(217,83,79,0.35)',  dot: '#d9534f', title: '#a23c38' },
+  media: { bg: 'rgba(224,169,46,0.08)',  border: 'rgba(224,169,46,0.4)',  dot: '#c8901c', title: '#8a6614' },
+  baja:  { bg: PT.greenSoft,             border: 'rgba(92,138,46,0.3)',   dot: PT.green,  title: PT.greenDeep },
 };
 
 function generateTips(state: PlantState): Tip[] {
@@ -142,28 +143,28 @@ export default function PlantAssistant({ state }: { state: PlantState }) {
   const tips = generateTips(state);
 
   return (
-    <div className="rounded-2xl p-5 flex flex-col gap-4"
-      style={{ background: '#ffffff', border: '2px solid #bbf7d0' }}>
+    <div className="rounded-3xl p-6 flex flex-col gap-4"
+      style={{ background: PT.card, border: `1px solid ${PT.border}`, boxShadow: PT.shadow }}>
 
       {/* Header */}
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-          style={{ background: '#f0fdf4', color: '#16a34a' }}>
-          <Lightbulb size={16} />
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
+          style={{ background: 'rgba(224,169,46,0.15)', color: '#c8901c' }}>
+          <Lightbulb size={18} />
         </div>
-        <span className="font-bold text-base" style={{ color: '#14532d' }}>Asistente de cuidado</span>
-        <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-semibold"
-          style={{ background: '#dcfce7', color: '#16a34a' }}>
+        <span className="font-bold text-base" style={{ color: PT.textHi }}>Asistente de cuidado</span>
+        <span className="ml-auto text-xs px-2.5 py-1 rounded-full font-semibold"
+          style={{ background: PT.greenSoft, color: PT.greenDeep }}>
           {tips.length} consejo{tips.length !== 1 ? 's' : ''}
         </span>
       </div>
 
       {/* Tips */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2.5">
         {tips.map((tip, i) => {
           const s = STYLE[tip.priority];
           return (
-            <div key={i} className="flex items-start gap-3 rounded-xl px-4 py-3"
+            <div key={i} className="flex items-start gap-3 rounded-2xl px-4 py-3.5"
               style={{ background: s.bg, border: `1px solid ${s.border}` }}>
               <div className="flex items-center gap-1.5 mt-0.5 shrink-0">
                 <span className="w-2 h-2 rounded-full" style={{ background: s.dot }} />
@@ -171,7 +172,7 @@ export default function PlantAssistant({ state }: { state: PlantState }) {
               </div>
               <div>
                 <p className="font-bold text-sm" style={{ color: s.title }}>{tip.title}</p>
-                <p className="text-xs mt-0.5" style={{ color: '#4b5563' }}>{tip.detail}</p>
+                <p className="text-xs mt-0.5" style={{ color: PT.textMed }}>{tip.detail}</p>
               </div>
             </div>
           );

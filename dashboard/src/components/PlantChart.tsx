@@ -21,15 +21,17 @@ interface PlantChartProps {
   range?: HistoryRange;
 }
 
-const S = '#ffffff';
-const B = '#bbf7d0';
+import { PT } from '@/lib/plantTheme';
+
+const S = PT.card;
+const B = PT.border;
 
 const tooltipStyle = {
-  backgroundColor: '#ffffff',
-  border: '1px solid #bbf7d0',
-  borderRadius: '8px',
+  backgroundColor: PT.card,
+  border: `1px solid ${PT.border}`,
+  borderRadius: '10px',
   fontSize: '12px',
-  color: '#14532d',
+  color: PT.textHi,
 };
 
 function formatTime(iso: string, longRange = false) {
@@ -99,12 +101,12 @@ export default function PlantChart({
   const gradientId = `grad-${sensorType}`;
 
   return (
-    <div className="rounded-xl p-4" style={{ background: S, border: `1px solid ${B}` }}>
+    <div className="rounded-2xl p-5" style={{ background: S, border: `1px solid ${B}`, boxShadow: PT.shadowSm }}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold" style={{ color: '#14532d' }}>{label}</h3>
+        <h3 className="text-sm font-bold" style={{ color: PT.textHi }}>{label}</h3>
         {!loading && displayLast !== null && (
           <span className="text-sm font-bold px-2.5 py-1 rounded-full"
-            style={{ background: 'rgba(255,255,255,0.05)', color }}>
+            style={{ background: `${color}1a`, color }}>
             {displayLast}{unit}
           </span>
         )}
@@ -112,28 +114,28 @@ export default function PlantChart({
 
       {loading ? (
         <div style={{ height }} className="flex items-center justify-center text-sm">
-          <span style={{ color: '#6b9960' }}>Cargando...</span>
+          <span style={{ color: PT.textDim }}>Cargando...</span>
         </div>
       ) : data.length === 0 ? (
         <div style={{ height }} className="flex items-center justify-center">
-          <span className="text-sm" style={{ color: '#6b9960' }}>Sin datos aún</span>
+          <span className="text-sm" style={{ color: PT.textDim }}>Sin datos aún</span>
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={height}>
           <AreaChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor={color} stopOpacity={0.3} />
-                <stop offset="95%" stopColor={color} stopOpacity={0.02} />
+                <stop offset="5%"  stopColor={color} stopOpacity={0.35} />
+                <stop offset="95%" stopColor={color} stopOpacity={0.03} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#dcfce7" />
-            <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#6b9960' }} interval="preserveStartEnd" />
-            <YAxis tick={{ fontSize: 10, fill: '#6b9960' }} />
+            <CartesianGrid strokeDasharray="3 3" stroke={PT.borderDim} />
+            <XAxis dataKey="time" tick={{ fontSize: 10, fill: PT.textDim }} interval="preserveStartEnd" />
+            <YAxis tick={{ fontSize: 10, fill: PT.textDim }} />
             <Tooltip contentStyle={tooltipStyle} formatter={(val) => [`${val}${unit}`, label]} />
             {sensorType === 'humedad_suelo' && (
-              <ReferenceLine y={25} stroke="#f59e0b" strokeDasharray="4 2"
-                label={{ value: 'Seco', position: 'insideTopRight', fontSize: 10, fill: '#f59e0b' }} />
+              <ReferenceLine y={25} stroke="#c8901c" strokeDasharray="4 2"
+                label={{ value: 'Seco', position: 'insideTopRight', fontSize: 10, fill: '#c8901c' }} />
             )}
             <Area
               type="monotone" dataKey="valor"

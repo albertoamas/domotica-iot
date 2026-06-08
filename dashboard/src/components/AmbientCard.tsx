@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { PT } from '@/lib/plantTheme';
 
 export interface AmbientZone {
   threshold: number;
@@ -43,26 +44,26 @@ export default function AmbientCard({
 
   return (
     <div
-      className="rounded-2xl p-6 flex flex-col gap-5 transition-all duration-500"
+      className="rounded-3xl p-6 flex flex-col gap-5 transition-all duration-500"
       style={{
-        background: '#ffffff',
-        border: `2px solid ${activeColor}30`,
-        boxShadow: `0 4px 24px ${activeColor}18`,
+        background: PT.card,
+        border: `1px solid ${activeColor}35`,
+        boxShadow: PT.shadow,
       }}
     >
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            className="w-11 h-11 rounded-2xl flex items-center justify-center"
             style={{ background: `${activeColor}18`, color: activeColor }}
           >
             {icon}
           </div>
-          <span className="font-bold text-base" style={{ color: '#14532d' }}>{title}</span>
+          <span className="font-bold text-base" style={{ color: PT.textHi }}>{title}</span>
         </div>
         <span
-          className="text-xs font-semibold px-3 py-1 rounded-full transition-all duration-500"
+          className="text-xs font-semibold px-3 py-1.5 rounded-full transition-all duration-500"
           style={{ background: `${activeColor}18`, color: activeColor }}
         >
           {activeZone?.label ?? '—'}
@@ -77,10 +78,7 @@ export default function AmbientCard({
         >
           {value !== null ? value : '—'}
         </span>
-        <span
-          className="font-bold mb-2"
-          style={{ fontSize: 28, color: activeColor }}
-        >
+        <span className="font-bold mb-2" style={{ fontSize: 28, color: activeColor }}>
           {unit}
         </span>
       </div>
@@ -88,15 +86,13 @@ export default function AmbientCard({
       {/* ── Arco decorativo ── */}
       <div className="flex flex-col items-center gap-1">
         <svg width={176} height={100} overflow="visible">
-          {/* Track */}
           <path
             d={`M ${cx - r},${cy} A ${r},${r} 0 0,1 ${cx + r},${cy}`}
             fill="none"
-            stroke="#dcfce7"
+            stroke={PT.cardSunk}
             strokeWidth={sw}
             strokeLinecap="round"
           />
-          {/* Relleno */}
           {value !== null && (
             <path
               d={`M ${cx - r},${cy} A ${r},${r} 0 0,1 ${cx + r},${cy}`}
@@ -110,13 +106,13 @@ export default function AmbientCard({
           )}
         </svg>
         <div className="flex justify-between w-44 -mt-3">
-          <span className="text-xs" style={{ color: '#6b9960' }}>{min}{unit}</span>
-          <span className="text-xs" style={{ color: '#6b9960' }}>{max}{unit}</span>
+          <span className="text-xs" style={{ color: PT.textDim }}>{min}{unit}</span>
+          <span className="text-xs" style={{ color: PT.textDim }}>{max}{unit}</span>
         </div>
       </div>
 
       {/* ── Leyenda de zonas ── */}
-      <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 pt-1 border-t" style={{ borderColor: '#dcfce7' }}>
+      <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 pt-3 border-t" style={{ borderColor: PT.borderDim }}>
         {zones.map((z) => (
           <div key={z.threshold} className="flex items-center gap-1.5">
             <span
@@ -126,7 +122,13 @@ export default function AmbientCard({
                 boxShadow: activeZone?.color === z.color ? `0 0 6px ${z.color}` : 'none',
               }}
             />
-            <span className="text-xs" style={{ color: activeZone?.color === z.color ? z.color : '#6b9960', fontWeight: activeZone?.color === z.color ? 600 : 400 }}>
+            <span
+              className="text-xs"
+              style={{
+                color: activeZone?.color === z.color ? z.color : PT.textDim,
+                fontWeight: activeZone?.color === z.color ? 600 : 400,
+              }}
+            >
               {z.label}
             </span>
           </div>
