@@ -73,23 +73,26 @@ export async function fetchPlantHistory(
 
 
 // Estado actual de la planta (última lectura de cada sensor)
+// Las horas de sol/sombra/frío se calculan desde la BD (no del acumulador del ESP32)
 export async function fetchLatestPlantReadings(): Promise<PlantState> {
-  const sensors: PlantSensorType[] = [
-    'temperatura', 'humedad_aire', 'luz_estado',
-    'humedad_suelo', 'horas_sol', 'horas_sombra', 'horas_frio',
-  ];
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
 
-  const results = await Promise.all(
-    sensors.map((s) =>
-      supabase
-        .from('plant_readings')
-        .select('*')
-        .eq('sensor_type', s)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-    )
-  );
+  // Fetch en paralelo: sensores directos + horas calculadas desde BD
+  const [sensorResults, hoursResult] = await Promise.all([
+    Promise.all(
+      (['temperatura', 'humedad_aire', 'luz_estado', 'humedad_suelo'] as PlantSensorType[]).map((s) =>
+        supabase
+          .from('plant_readings')
+          .select('*')
+          .eq('sensor_type', s)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      )
+    ),
+    supabase.rpc('get_plant_computed_hours', { p_since: startOfDay.toISOString() }),
+  ]);
 
   const state: PlantState = {
     temperatura: null, humedad_aire: null, luz_estado: null,
@@ -97,7 +100,7 @@ export async function fetchLatestPlantReadings(): Promise<PlantState> {
     horas_frio: null, lastUpdate: null,
   };
 
-  results.forEach((r) => {
+  sensorResults.forEach((r) => {
     if (!r.data) return;
     const row = r.data as PlantReading;
     (state as unknown as Record<string, number | null>)[row.sensor_type] = row.valor;
@@ -105,6 +108,14 @@ export async function fetchLatestPlantReadings(): Promise<PlantState> {
       state.lastUpdate = row.created_at;
     }
   });
+
+  // Horas calculadas desde la BD (desde medianoche, no se reinician con el ESP32)
+  if (!hoursResult.error && hoursResult.data?.[0]) {
+    const h = hoursResult.data[0] as { horas_sol: number; horas_sombra: number; horas_frio: number };
+    state.horas_sol    = Number(h.horas_sol);
+    state.horas_sombra = Number(h.horas_sombra);
+    state.horas_frio   = Number(h.horas_frio);
+  }
 
   return state;
 }

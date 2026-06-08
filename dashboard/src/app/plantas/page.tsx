@@ -71,6 +71,8 @@ export default function PlantasPage() {
       .channel('plantas-realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'plant_readings' }, (payload) => {
         const row = payload.new as PlantReading;
+        // Las horas se calculan desde la BD — ignorar valores acumulados del ESP32
+        if (['horas_sol', 'horas_sombra', 'horas_frio'].includes(row.sensor_type)) return;
         setPlant((prev) => ({ ...prev, [row.sensor_type]: row.valor, lastUpdate: row.created_at }));
       })
       .subscribe();
