@@ -71,35 +71,6 @@ export async function fetchPlantHistory(
   return rows.reverse();
 }
 
-// Exporta los datos de hoy como CSV y dispara la descarga en el navegador
-export async function exportPlantCSV(): Promise<void> {
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-
-  const { data, error } = await supabase
-    .from('plant_readings')
-    .select('id, created_at, sensor_type, valor')
-    .gte('created_at', startOfDay.toISOString())
-    .order('created_at', { ascending: true });
-
-  if (error) throw new Error(error.message);
-
-  const rows = data as PlantReading[];
-  const csv = [
-    'id,created_at,sensor_type,valor',
-    ...rows.map((r) => `${r.id},${r.created_at},${r.sensor_type},${r.valor}`),
-  ].join('\n');
-
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `planta_${new Date().toISOString().split('T')[0]}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
 
 // Estado actual de la planta (última lectura de cada sensor)
 export async function fetchLatestPlantReadings(): Promise<PlantState> {
