@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { Sun, Moon } from 'lucide-react';
 import { supabase, fetchLatestReadings } from '@/lib/supabase';
 import type { SensorReading, RoomState } from '@/lib/types';
 import { GAS_ALERT_THRESHOLD } from '@/lib/types';
-import RoomCard from '@/components/RoomCard';
 import GasAlert from '@/components/GasAlert';
 import LedControl from '@/components/LedControl';
-import GaugeChart from '@/components/GaugeChart';
+import SensorRing from '@/components/SensorRing';
 
 const EMPTY_STATE: RoomState = {
   temperatura: null, humedad: null, gas: null, luz: null, lastUpdate: null,
@@ -29,121 +29,114 @@ function applyReading(prev: RoomState, row: SensorReading): RoomState {
   return { ...prev, [row.sensor_type]: row.valor, lastUpdate: row.created_at };
 }
 
-// Zonas de color por sensor
 const TEMP_ZONES = [
-  { threshold: 0,  color: '#818cf8' }, // frío
-  { threshold: 18, color: '#4ade80' }, // ideal
-  { threshold: 28, color: '#fb923c' }, // caliente
-  { threshold: 35, color: '#f87171' }, // crítico
+  { threshold: 0,  color: '#818cf8' },
+  { threshold: 18, color: '#4ade80' },
+  { threshold: 28, color: '#fb923c' },
+  { threshold: 35, color: '#f87171' },
 ];
 const HUM_ZONES = [
-  { threshold: 0,  color: '#f87171' }, // muy seco
-  { threshold: 30, color: '#fbbf24' }, // bajo
-  { threshold: 50, color: '#4ade80' }, // ideal
-  { threshold: 80, color: '#60a5fa' }, // muy húmedo
+  { threshold: 0,  color: '#f87171' },
+  { threshold: 30, color: '#fbbf24' },
+  { threshold: 50, color: '#4ade80' },
+  { threshold: 80, color: '#60a5fa' },
 ];
 const GAS_ZONES = [
-  { threshold: 0,    color: '#4ade80' }, // normal
-  { threshold: 1000, color: '#fbbf24' }, // moderado
-  { threshold: 2000, color: '#fb923c' }, // alto
-  { threshold: 3000, color: '#f87171' }, // crítico
+  { threshold: 0,    color: '#4ade80' },
+  { threshold: 1000, color: '#fbbf24' },
+  { threshold: 2000, color: '#fb923c' },
+  { threshold: 3000, color: '#f87171' },
 ];
 
-// Props de tema para que los gauges se vean bien en fondo claro
-const LIGHT_GAUGE = {
-  trackColor: '#e5e7eb',
-  labelColor: '#9ca3af',
-  minMaxColor: '#9ca3af',
-};
-
-interface RoomGaugesProps {
-  state: RoomState;
+interface RoomPanelProps {
   habitacion: 1 | 2;
+  state: RoomState;
 }
 
-function RoomGauges({ state, habitacion }: RoomGaugesProps) {
-  const gasAlert = state.gas !== null && state.gas > GAS_ALERT_THRESHOLD;
+function RoomPanel({ habitacion, state }: RoomPanelProps) {
+  const gasAlert  = state.gas !== null && state.gas > GAS_ALERT_THRESHOLD;
+  const isOscuro  = state.luz === 1;
+  const lastUpdate = state.lastUpdate
+    ? new Date(state.lastUpdate).toLocaleTimeString('es-ES')
+    : null;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-          Habitación {habitacion} — Velocímetros
-        </h3>
-        {gasAlert && (
-          <span className="text-xs font-bold text-red-500 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full animate-pulse">
-            ⚠ Gas elevado
-          </span>
-        )}
-      </div>
-
-      <div className="grid grid-cols-3 gap-2">
-        {/* Temperatura */}
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">Temp</span>
-          <GaugeChart
-            value={state.temperatura}
-            min={0} max={50}
-            label="Temperatura" unit="°C"
-            color="#fb923c" size={150}
-            zones={TEMP_ZONES}
-            {...LIGHT_GAUGE}
-          />
-          <div className="flex flex-wrap justify-center gap-1.5 mt-1">
-            <LegendDot color="#818cf8" label="Frío" />
-            <LegendDot color="#4ade80" label="Ideal" />
-            <LegendDot color="#fb923c" label="Caliente" />
-            <LegendDot color="#f87171" label="Crítico" />
+    <div className="rounded-2xl overflow-hidden shadow-lg border border-slate-200">
+      {/* Header */}
+      <div className={`px-5 py-3 flex items-center justify-between ${gasAlert ? 'bg-red-600' : 'bg-slate-800'}`}>
+        <div className="flex items-center gap-3">
+          <span className="text-white font-bold text-base">Habitación {habitacion}</span>
+          {gasAlert && (
+            <span className="text-xs font-bold bg-white text-red-600 px-2 py-0.5 rounded-full animate-pulse">
+              ⚠ Gas elevado
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          {lastUpdate && <span className="text-xs text-slate-400">{lastUpdate}</span>}
+          <div className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
+            isOscuro ? 'bg-indigo-900 text-indigo-300' : 'bg-yellow-900 text-yellow-300'
+          }`}>
+            {isOscuro ? <Moon size={11} /> : <Sun size={11} />}
+            {isOscuro ? 'Oscuro' : 'Con luz'}
           </div>
         </div>
+      </div>
 
-        {/* Humedad */}
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">Humedad</span>
-          <GaugeChart
+      {/* Rings */}
+      <div className="bg-slate-900 px-4 py-6">
+        <div className="grid grid-cols-3 gap-2 place-items-center">
+          <SensorRing
+            value={state.temperatura}
+            min={0} max={50}
+            label="Temp" unit="°C"
+            baseColor="#fb923c"
+            size={130}
+            zones={TEMP_ZONES}
+          />
+          <SensorRing
             value={state.humedad}
             min={0} max={100}
             label="Humedad" unit="%"
-            color="#60a5fa" size={150}
+            baseColor="#60a5fa"
+            size={130}
             zones={HUM_ZONES}
-            {...LIGHT_GAUGE}
           />
-          <div className="flex flex-wrap justify-center gap-1.5 mt-1">
-            <LegendDot color="#f87171" label="Seco" />
-            <LegendDot color="#fbbf24" label="Bajo" />
-            <LegendDot color="#4ade80" label="Ideal" />
-            <LegendDot color="#60a5fa" label="Alto" />
-          </div>
-        </div>
-
-        {/* Gas */}
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">Gas</span>
-          <GaugeChart
+          <SensorRing
             value={state.gas}
             min={0} max={4095}
             label="Gas" unit=""
-            color="#4ade80" size={150}
+            baseColor="#4ade80"
+            size={130}
             zones={GAS_ZONES}
-            {...LIGHT_GAUGE}
           />
-          <div className="flex flex-wrap justify-center gap-1.5 mt-1">
-            <LegendDot color="#4ade80" label="Normal" />
-            <LegendDot color="#fbbf24" label="Mod." />
-            <LegendDot color="#fb923c" label="Alto" />
-            <LegendDot color="#f87171" label="Crítico" />
-          </div>
         </div>
+
+        {/* Leyendas */}
+        <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+          <Legend zones={TEMP_ZONES} labels={['Frío','Ideal','Caliente','Crítico']} />
+          <Legend zones={HUM_ZONES}  labels={['Seco','Bajo','Ideal','Húmedo']}     />
+          <Legend zones={GAS_ZONES}  labels={['Normal','Mod.','Alto','Crítico']}   />
+        </div>
+      </div>
+
+      {/* LED control */}
+      <div className="bg-white px-5 py-3 border-t border-slate-100">
+        <LedControl habitacion={habitacion} />
       </div>
     </div>
   );
 }
 
-function LegendDot({ color, label }: { color: string; label: string }) {
+function Legend({ zones, labels }: { zones: { color: string }[]; labels: string[] }) {
   return (
-    <div className="flex items-center gap-1">
-      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
-      <span className="text-[10px] text-gray-400">{label}</span>
+    <div className="flex flex-col gap-1">
+      {zones.map((z, i) => (
+        <div key={i} className="flex items-center gap-1.5 justify-center">
+          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: z.color }} />
+          <span className="text-[10px] text-slate-500">{labels[i]}</span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -209,18 +202,8 @@ export default function DashboardPage() {
         <div className="text-center py-20 text-gray-400">Cargando datos del servidor...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {/* Habitación 1 */}
-          <div className="space-y-3">
-            <RoomCard habitacion={1} state={room1} />
-            <RoomGauges state={room1} habitacion={1} />
-            <LedControl habitacion={1} />
-          </div>
-          {/* Habitación 2 */}
-          <div className="space-y-3">
-            <RoomCard habitacion={2} state={room2} />
-            <RoomGauges state={room2} habitacion={2} />
-            <LedControl habitacion={2} />
-          </div>
+          <RoomPanel habitacion={1} state={room1} />
+          <RoomPanel habitacion={2} state={room2} />
         </div>
       )}
     </div>
