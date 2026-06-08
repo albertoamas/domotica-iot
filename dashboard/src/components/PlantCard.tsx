@@ -1,8 +1,8 @@
 'use client';
 
-import { Sun, Moon, Leaf, Droplets, Thermometer, Wind } from 'lucide-react';
+import { Sun, Moon, Leaf, Droplets, Thermometer, Wind, Snowflake } from 'lucide-react';
 import type { PlantState } from '@/lib/plantTypes';
-import { sueloPercent, formatHoras } from '@/lib/plantTypes';
+import { sueloPercent, formatHoras, calcSolPercent, calcSolLabel } from '@/lib/plantTypes';
 
 // Paleta tierra-bosque (sincronizada con layout.tsx)
 const T = {
@@ -29,6 +29,9 @@ export default function PlantCard({ state }: PlantCardProps) {
 
   const horasSol    = formatHoras(state.horas_sol);
   const horasSombra = formatHoras(state.horas_sombra);
+  const horasFrio   = formatHoras(state.horas_frio);
+  const solPct      = calcSolPercent(state.horas_sol, state.horas_sombra);
+  const solInfo     = solPct !== null ? calcSolLabel(solPct) : null;
   const lastUpdate  = state.lastUpdate
     ? new Date(state.lastUpdate).toLocaleTimeString('es-ES') : null;
 
@@ -62,7 +65,7 @@ export default function PlantCard({ state }: PlantCardProps) {
       {/* ── Grid de métricas 3 columnas ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
-        {/* Columna 1 — Temperatura y Humedad aire */}
+        {/* Columna 1 — Temperatura, Humedad aire, Horas frío */}
         <div className="flex flex-col gap-3">
           <div className="rounded-xl p-4"
             style={{ background: T.cardRaise, border: `1px solid ${T.borderDim}` }}>
@@ -86,6 +89,16 @@ export default function PlantCard({ state }: PlantCardProps) {
               {state.humedad_aire !== null ? state.humedad_aire : '—'}
             </span>
             <span className="text-lg font-semibold text-blue-400 ml-1">%</span>
+          </div>
+
+          {/* Horas frío */}
+          <div className="rounded-xl px-4 py-3 flex items-center gap-3"
+            style={{ background: 'rgba(129,140,248,0.06)', border: '1px solid #c7d2fe' }}>
+            <Snowflake size={16} className="text-indigo-400 shrink-0" />
+            <div>
+              <p className="text-xs font-medium" style={{ color: T.textMed }}>Horas frío (&lt;7°C)</p>
+              <p className="text-lg font-extrabold text-indigo-400">{horasFrio}</p>
+            </div>
           </div>
         </div>
 
@@ -132,28 +145,47 @@ export default function PlantCard({ state }: PlantCardProps) {
           </div>
         </div>
 
-        {/* Columna 3 — Horas de luz */}
+        {/* Columna 3 — Horas de luz + % solar */}
         <div className="flex flex-col gap-3">
-          <div className="rounded-xl p-4 flex-1"
+
+          {/* Porcentaje de sol del día */}
+          {solInfo && solPct !== null && (
+            <div className="rounded-xl p-4"
+              style={{ background: 'rgba(253,230,138,0.06)', border: `1px solid ${solInfo.color}50` }}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium" style={{ color: T.textMed }}>% del tiempo con sol</span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                  style={{ background: `${solInfo.color}20`, color: solInfo.color }}>
+                  {solInfo.label}
+                </span>
+              </div>
+              <div className="flex items-end gap-1 mb-2">
+                <span className="text-3xl font-extrabold" style={{ color: solInfo.color }}>{solPct}</span>
+                <span className="text-base font-bold mb-0.5" style={{ color: solInfo.color }}>%</span>
+              </div>
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: T.borderDim }}>
+                <div className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${solPct}%`, background: solInfo.color }} />
+              </div>
+            </div>
+          )}
+
+          <div className="rounded-xl p-4"
             style={{ background: 'rgba(253,230,138,0.06)', border: '1px solid #713f12' }}>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-2">
               <Sun size={16} className="text-yellow-400" />
               <span className="text-xs font-medium" style={{ color: T.textMed }}>Horas de sol acum.</span>
             </div>
-            <span className="text-4xl font-extrabold text-yellow-400">
-              {horasSol}
-            </span>
+            <span className="text-3xl font-extrabold text-yellow-400">{horasSol}</span>
           </div>
 
-          <div className="rounded-xl p-4 flex-1"
+          <div className="rounded-xl p-4"
             style={{ background: 'rgba(129,140,248,0.06)', border: '1px solid #312e81' }}>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-2">
               <Moon size={16} className="text-indigo-400" />
               <span className="text-xs font-medium" style={{ color: T.textMed }}>Horas de sombra acum.</span>
             </div>
-            <span className="text-4xl font-extrabold text-indigo-400">
-              {horasSombra}
-            </span>
+            <span className="text-3xl font-extrabold text-indigo-400">{horasSombra}</span>
           </div>
         </div>
       </div>

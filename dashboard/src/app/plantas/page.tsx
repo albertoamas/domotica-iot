@@ -10,6 +10,7 @@ import AmbientCard from '@/components/AmbientCard';
 import PlantAlert from '@/components/PlantAlert';
 import PlantHealthWidget from '@/components/PlantHealthWidget';
 import PlantStatsCard from '@/components/PlantStatsCard';
+import PlantAssistant from '@/components/PlantAssistant';
 
 const C = {
   cardBg:    '#ffffff',
@@ -21,7 +22,8 @@ const C = {
 
 const EMPTY: PlantState = {
   temperatura: null, humedad_aire: null, luz_estado: null,
-  humedad_suelo: null, horas_sol: null, horas_sombra: null, lastUpdate: null,
+  humedad_suelo: null, horas_sol: null, horas_sombra: null,
+  horas_frio: null, lastUpdate: null,
 };
 
 const TEMP_ZONES = [
@@ -109,6 +111,12 @@ export default function PlantasPage() {
       <section>
         <SectionTitle>Salud de la planta</SectionTitle>
         <PlantHealthWidget state={plant} />
+      </section>
+
+      {/* ── Asistente inteligente ── */}
+      <section>
+        <SectionTitle>Asistente de cuidado</SectionTitle>
+        <PlantAssistant state={plant} />
       </section>
 
       {/* ── Condiciones ambientales ── */}

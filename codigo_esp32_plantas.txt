@@ -15,12 +15,13 @@ const char* mqtt_user = "CeciliaM";
 const char* mqtt_password = "Chachi1212";
 
 // ── Tópicos MQTT ────────────────────────────────────────
-#define TOPIC_TEMP        "planta/temperatura"
-#define TOPIC_HUM         "planta/humedad_aire"
-#define TOPIC_LUZ         "planta/luz_estado"
-#define TOPIC_SUELO       "planta/humedad_suelo"
-#define TOPIC_HORAS_SOL   "planta/horas_sol"
+#define TOPIC_TEMP         "planta/temperatura"
+#define TOPIC_HUM          "planta/humedad_aire"
+#define TOPIC_LUZ          "planta/luz_estado"
+#define TOPIC_SUELO        "planta/humedad_suelo"
+#define TOPIC_HORAS_SOL    "planta/horas_sol"
 #define TOPIC_HORAS_SOMBRA "planta/horas_sombra"
+#define TOPIC_HORAS_FRIO   "planta/horas_frio"
 
 // ── Pines ───────────────────────────────────────────────
 #define DHT_PIN     25
@@ -36,8 +37,9 @@ PubSubClient client(espClient);
 
 // ── Variables para acumulación de tiempo ────────────────
 unsigned long tiempoAnterior = 0;
-unsigned long tiempoSol = 0;
+unsigned long tiempoSol    = 0;
 unsigned long tiempoSombra = 0;
+unsigned long tiempoFrio   = 0;   // acumulado cuando temperatura < 7°C
 
 // NOTA: Pin 13 es ADC2 — analogRead() no funciona con WiFi activo.
 // El módulo LDR digital usa DO (salida digital): 0 = hay luz, 1 = oscuro (lógica invertida).
@@ -172,12 +174,19 @@ void loop() {
     tiempoSombra += delta;
   }
 
-  // ── Conversión a horas ────────────────────────────────
-  float horasSol = tiempoSol / 3600000.0;
-  float horasSombra = tiempoSombra / 3600000.0;
+  // Acumular tiempo frío (temperatura < 7°C)
+  if (!isnan(temperatura) && temperatura < 7.0) {
+    tiempoFrio += delta;
+  }
 
-  publicar(TOPIC_HORAS_SOL, String(horasSol, 4));
+  // ── Conversión a horas ────────────────────────────────
+  float horasSol    = tiempoSol    / 3600000.0;
+  float horasSombra = tiempoSombra / 3600000.0;
+  float horasFrio   = tiempoFrio   / 3600000.0;
+
+  publicar(TOPIC_HORAS_SOL,    String(horasSol, 4));
   publicar(TOPIC_HORAS_SOMBRA, String(horasSombra, 4));
+  publicar(TOPIC_HORAS_FRIO,   String(horasFrio, 4));
 
   // ── Humedad del suelo ─────────────────────────────────
   publicar(TOPIC_SUELO, String(sueloRaw));

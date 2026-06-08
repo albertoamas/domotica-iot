@@ -33,6 +33,23 @@ CREATE POLICY "service_insert"
 --  Función RPC para estadísticas de hoy (evita límite 1000 filas)
 --  Ejecutar en SQL Editor si aún no existe
 -- ============================================================
+-- ============================================================
+--  Actualización: añadir 'horas_frio' al CHECK constraint
+--  Ejecutar cuando se cargue el nuevo codigo ESP32 con horas_frio
+-- ============================================================
+ALTER TABLE plant_readings
+  DROP CONSTRAINT IF EXISTS plant_readings_sensor_type_check;
+ALTER TABLE plant_readings
+  ADD CONSTRAINT plant_readings_sensor_type_check
+    CHECK (sensor_type IN (
+      'temperatura', 'humedad_aire', 'luz_estado',
+      'humedad_suelo', 'horas_sol', 'horas_sombra', 'horas_frio'
+    ));
+
+-- ============================================================
+--  Función RPC para estadísticas de hoy (evita límite 1000 filas)
+--  Ejecutar en SQL Editor si aún no existe
+-- ============================================================
 CREATE OR REPLACE FUNCTION get_plant_today_stats(p_since timestamptz)
 RETURNS TABLE (sensor_type text, min_val numeric, max_val numeric, avg_val numeric, cnt bigint)
 LANGUAGE sql STABLE

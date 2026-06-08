@@ -5,7 +5,7 @@ import type { PlantState } from '@/lib/plantTypes';
 import {
   calcHealthScore, calcHealthLabel,
   calcStressIndex, calcClimateClass,
-  calcIrrigationPrediction,
+  calcIrrigationPrediction, calcEvapotranspiration,
 } from '@/lib/plantTypes';
 
 interface Props { state: PlantState }
@@ -50,6 +50,7 @@ export default function PlantHealthWidget({ state }: Props) {
   const stress  = calcStressIndex(state);
   const climate = calcClimateClass(state);
   const riego   = calcIrrigationPrediction(state);
+  const et      = calcEvapotranspiration(state);
 
   const stressPriority =
     stress.level === 'alto'  ? 'critica' :
@@ -68,6 +69,20 @@ export default function PlantHealthWidget({ state }: Props) {
           <Wind size={16} />
         </div>
         <span className="font-bold text-base" style={{ color: '#14532d' }}>Salud de la planta</span>
+      </div>
+
+      {/* Evapotranspiración */}
+      <div className="rounded-xl px-4 py-3 flex items-center justify-between gap-4"
+        style={{ background: '#f0fdf4', border: `1px solid ${et.color}40` }}>
+        <div className="flex items-center gap-2">
+          <span className="text-sm" style={{ color: et.color }}>💧</span>
+          <span className="text-xs font-bold" style={{ color: '#14532d' }}>Evapotranspiración estimada</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-lg font-extrabold" style={{ color: et.color }}>{et.mmPerDay} mm/día</span>
+          <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+            style={{ background: `${et.color}20`, color: et.color }}>{et.label}</span>
+        </div>
       </div>
 
       {/* Main grid */}

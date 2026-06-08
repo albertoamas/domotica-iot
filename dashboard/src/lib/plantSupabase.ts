@@ -38,27 +38,74 @@ export async function fetchPlantTodayStats(): Promise<PlantTodayStats> {
   return result;
 }
 
-// Últimas N lecturas de un sensor de planta
+export type HistoryRange = 'realtime' | '1h' | '6h' | '24h';
+
+// Lecturas históricas con rango de tiempo opcional
 export async function fetchPlantHistory(
   sensor_type: PlantSensorType,
-  limit = PLANT_CHART_LIMIT
+  range: HistoryRange = 'realtime'
 ): Promise<PlantReading[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from('plant_readings')
     .select('*')
     .eq('sensor_type', sensor_type)
-    .order('created_at', { ascending: false })
-    .limit(limit);
+    .order('created_at', { ascending: false });
+
+  if (range === 'realtime') {
+    query = query.limit(PLANT_CHART_LIMIT);
+  } else {
+    const horasAtras = range === '1h' ? 1 : range === '6h' ? 6 : 24;
+    const since = new Date(Date.now() - horasAtras * 3600 * 1000);
+    query = query.gte('created_at', since.toISOString()).limit(500);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  const rows = data as PlantReading[];
+
+  // Downsample a máximo 150 puntos para gráfica fluida
+  if (rows.length > 150) {
+    const step = Math.floor(rows.length / 150);
+    return rows.filter((_, i) => i % step === 0).reverse();
+  }
+  return rows.reverse();
+}
+
+// Exporta los datos de hoy como CSV y dispara la descarga en el navegador
+export async function exportPlantCSV(): Promise<void> {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from('plant_readings')
+    .select('id, created_at, sensor_type, valor')
+    .gte('created_at', startOfDay.toISOString())
+    .order('created_at', { ascending: true });
 
   if (error) throw new Error(error.message);
-  return (data as PlantReading[]).reverse();
+
+  const rows = data as PlantReading[];
+  const csv = [
+    'id,created_at,sensor_type,valor',
+    ...rows.map((r) => `${r.id},${r.created_at},${r.sensor_type},${r.valor}`),
+  ].join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `planta_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // Estado actual de la planta (última lectura de cada sensor)
 export async function fetchLatestPlantReadings(): Promise<PlantState> {
   const sensors: PlantSensorType[] = [
     'temperatura', 'humedad_aire', 'luz_estado',
-    'humedad_suelo', 'horas_sol', 'horas_sombra',
+    'humedad_suelo', 'horas_sol', 'horas_sombra', 'horas_frio',
   ];
 
   const results = await Promise.all(
@@ -76,7 +123,7 @@ export async function fetchLatestPlantReadings(): Promise<PlantState> {
   const state: PlantState = {
     temperatura: null, humedad_aire: null, luz_estado: null,
     humedad_suelo: null, horas_sol: null, horas_sombra: null,
-    lastUpdate: null,
+    horas_frio: null, lastUpdate: null,
   };
 
   results.forEach((r) => {

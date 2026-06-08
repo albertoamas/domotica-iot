@@ -7,6 +7,7 @@ import {
 } from 'recharts';
 import { supabase } from '@/lib/supabase';
 import { fetchPlantHistory } from '@/lib/plantSupabase';
+import type { HistoryRange } from '@/lib/plantSupabase';
 import type { PlantReading, PlantSensorType } from '@/lib/plantTypes';
 import { PLANT_CHART_LIMIT, sueloPercent } from '@/lib/plantTypes';
 
@@ -17,6 +18,7 @@ interface PlantChartProps {
   unit: string;
   height?: number;
   transform?: (v: number) => number;
+  range?: HistoryRange;
 }
 
 const S = '#ffffff';
@@ -30,33 +32,45 @@ const tooltipStyle = {
   color: '#14532d',
 };
 
-function formatTime(iso: string) {
+function formatTime(iso: string, longRange = false) {
+  if (longRange) {
+    return new Date(iso).toLocaleString('es-ES', {
+      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+    });
+  }
   return new Date(iso).toLocaleTimeString('es-ES', {
     hour: '2-digit', minute: '2-digit', second: '2-digit',
   });
 }
 
 export default function PlantChart({
-  sensorType, label, color, unit, height = 200, transform,
+  sensorType, label, color, unit, height = 200, transform, range = 'realtime',
 }: PlantChartProps) {
   const [data, setData] = useState<PlantReading[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadHistory = useCallback(async () => {
     try {
-      setData(await fetchPlantHistory(sensorType, PLANT_CHART_LIMIT));
+      setData(await fetchPlantHistory(sensorType, range));
     } catch (err) {
       console.error(`[PlantChart] ${sensorType}:`, err);
     } finally {
       setLoading(false);
     }
-  }, [sensorType]);
+  }, [sensorType, range]);
 
   useEffect(() => {
+    setLoading(true);
     loadHistory();
 
-    // Polling cada 5s — respaldo si Realtime no está habilitado
-    const interval = setInterval(loadHistory, 5000);
+    // Polling cada 5s en modo realtime; cada 30s en modos históricos
+    const pollMs = range === 'realtime' ? 5000 : 30_000;
+    const interval = setInterval(loadHistory, pollMs);
+
+    // Realtime solo en modo live
+    if (range !== 'realtime') {
+      return () => clearInterval(interval);
+    }
 
     const channel = supabase
       .channel(`plant-chart-${sensorType}`)
@@ -71,13 +85,14 @@ export default function PlantChart({
       clearInterval(interval);
       supabase.removeChannel(channel);
     };
-  }, [sensorType, loadHistory]);
+  }, [sensorType, range, loadHistory]);
 
   const lastVal = data.length > 0 ? data[data.length - 1].valor : null;
   const displayLast = lastVal !== null ? (transform ? transform(lastVal) : lastVal) : null;
 
+  const longRange = range !== 'realtime';
   const chartData = data.map((r) => ({
-    time: formatTime(r.created_at),
+    time: formatTime(r.created_at, longRange),
     valor: transform ? transform(r.valor) : Number(r.valor),
   }));
 

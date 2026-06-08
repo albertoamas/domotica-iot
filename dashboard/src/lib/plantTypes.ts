@@ -4,7 +4,8 @@ export type PlantSensorType =
   | 'luz_estado'
   | 'humedad_suelo'
   | 'horas_sol'
-  | 'horas_sombra';
+  | 'horas_sombra'
+  | 'horas_frio';
 
 export interface PlantReading {
   id: number;
@@ -20,6 +21,7 @@ export interface PlantState {
   humedad_suelo:  number | null;   // 0–4095 raw (menor = más húmedo)
   horas_sol:      number | null;   // horas acumuladas desde boot
   horas_sombra:   number | null;
+  horas_frio:     number | null;   // horas acumuladas con temp < 7°C
   lastUpdate:     string | null;
 }
 
@@ -141,6 +143,38 @@ export function calcClimateClass(state: PlantState): { title: string; detail: st
   if (h !== null && h > 85)
     return { title: 'Día muy húmedo',                 detail: 'Alta humedad — vigilar hongos o enfermedades.' };
   return   { title: 'Condiciones moderadas',          detail: 'Variables dentro de rango aceptable.' };
+}
+
+// ─── Porcentaje de sol del día ────────────────────────────────────────────────
+export function calcSolPercent(sol: number | null, sombra: number | null): number | null {
+  if (sol === null || sombra === null) return null;
+  const total = sol + sombra;
+  if (total <= 0.001) return null;
+  return Math.round((sol / total) * 100);
+}
+
+export function calcSolLabel(pct: number): { label: string; color: string } {
+  if (pct >= 70) return { label: 'Mucha luz directa',    color: '#f59e0b' };
+  if (pct >= 40) return { label: 'Exposición moderada',  color: '#4ade80' };
+  if (pct >= 15) return { label: 'Poca exposición',      color: '#60a5fa' };
+  return              { label: 'Casi sin luz directa', color: '#818cf8' };
+}
+
+// ─── Evapotranspiración simplificada ─────────────────────────────────────────
+export function calcEvapotranspiration(state: PlantState): {
+  mmPerDay: number; label: string; color: string;
+} {
+  const t       = state.temperatura ?? 22;
+  const h       = state.humedad_aire ?? 60;
+  const hayLuz  = state.luz_estado === 1;
+  const base    = t * 0.13;
+  const humFact = Math.max(0, (80 - h) / 80) * 1.8;
+  const luFact  = hayLuz ? 1.7 : 0.75;
+  const et      = Math.round(Math.max(0, (base + humFact) * luFact) * 10) / 10;
+
+  if (et < 1.5) return { mmPerDay: et, label: 'Evaporación baja',     color: '#60a5fa' };
+  if (et < 3.5) return { mmPerDay: et, label: 'Evaporación moderada', color: '#4ade80' };
+  return             { mmPerDay: et, label: 'Evaporación alta',      color: '#f59e0b' };
 }
 
 // ─── Predicción de riego ─────────────────────────────────────────────────
